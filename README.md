@@ -260,4 +260,4 @@ For support, email affilpm2004@gmail.com or create an issue in the GitHub reposi
 
 ---
 
-**Built with ❤️ by [AFFIL P M]**
+**Built with ❤️ by AFFIL P M**
