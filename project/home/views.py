@@ -1075,8 +1075,11 @@ def add_coupon(request):
     }
 
     if request.method == 'POST':
-        form = CouponForm(request.POST)
+        form = CouponForm(request.POST, initial=initial_data)
         if form.is_valid():
+            coupon = form.save(commit=False)
+            coupon.code = generated_code
+            coupon.save
             form.save()
             return redirect('admin_coupons')
     else:
