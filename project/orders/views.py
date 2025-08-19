@@ -1,10 +1,8 @@
 from django.shortcuts import render, redirect,HttpResponse, HttpResponseRedirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
 from django.http import JsonResponse
 from cart.models import Cart
 from django.urls import reverse
-from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import Order, OrderItem, Coupon, Wallet, CancellationRequest, Razorpay_Order, Order_Address, Transaction
 from home.models import Address, Product
@@ -19,17 +17,11 @@ from django.apps import apps
 from decimal import Decimal
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-import requests
-from django.conf import settings
 import razorpay # type: ignore
 
-#################not superuser###########################################################################################################################
+
 def is_not_superuser(user):
     return not user.is_superuser
-
-
-############orders#############################
-
 
 
 def orders(request):
@@ -37,8 +29,6 @@ def orders(request):
     current_user_orders = Order.objects.filter(user=request.user).select_related('user').prefetch_related('items__product').order_by('-order_date')
     
     return render(request, 'orders.html', {'orders': current_user_orders})
-
-
 
 
 @user_passes_test(is_not_superuser, login_url='user_login')
@@ -57,10 +47,6 @@ def order_detail(request, order_id):
 
 
 
-
-#############generate_invoice#####################
-
-
 @user_passes_test(is_not_superuser, login_url='user_login')
 @never_cache
 def generate_invoice(request, order_id):
@@ -73,12 +59,6 @@ def generate_invoice(request, order_id):
     razorpay_order = order.razorpay_order
     is_paid = razorpay_order.paid if razorpay_order else False
     return render(request, 'invoice.html', {'order': order,  'is_paid': is_paid})
-
-
-
-
-############### request_item_cancellation###################
-
 
 
 @user_passes_test(is_not_superuser, login_url='user_login')
@@ -103,10 +83,6 @@ def request_item_cancellation(request, item_id):
         form = CancellationRequestForm()
 
     return render(request, 'order_detail.html', {'form': form, 'order_item': order_item, 'order': order_item.order})
-
-
-
-#########retry_razorpay#########################
 
 
 @user_passes_test(lambda u: not u.is_superuser, login_url='user_login')
@@ -134,27 +110,12 @@ def retry_razorpay(request):
     else:
         return redirect('home')
 
-  
-  
-  
-  
-
-###########remove_coupon##########################
-
-
 
 @user_passes_test(lambda u: not u.is_superuser, login_url='user_login')
 def remove_coupon(request):
     if 'coupon_id' in request.session:
         del request.session['coupon_id']
     return redirect('checkout')
-
-
-
-
-
-##############apply_coupon####################
-
 
 
 @user_passes_test(lambda u: not u.is_superuser, login_url='user_login')
@@ -174,8 +135,6 @@ def apply_coupon(request):
     return redirect('checkout')
 
 
-##############add_address_checkout#######################
-
 @never_cache
 @user_passes_test(is_not_superuser, login_url='user_login')
 def add_address_checkout(request):
@@ -190,12 +149,6 @@ def add_address_checkout(request):
     else:
         form = AddressForm()
     return render(request, 'add_address_checkout.html', {'form': form})
-
-
-
-
-###########checkout#######################
-
 
 
 @user_passes_test(lambda u: not u.is_superuser, login_url='user_login')
@@ -250,20 +203,6 @@ def checkout(request):
 
 
 
-
-
-
-
-
- 
- 
-
-
-
-#########place_order##############################
-
-
-
 @user_passes_test(lambda u: not u.is_superuser, login_url='user_login')
 def place_order(request):
     if request.method == 'POST':
@@ -275,10 +214,6 @@ def place_order(request):
             return redirect('checkout')
 
     return redirect('order_success')
-
-
-
-########razorpay_view##############################
 
 
 @user_passes_test(lambda u: not u.is_superuser, login_url='user_login')
@@ -324,10 +259,6 @@ def razorpay_view(request):
         return redirect('home') 
 
 
-
-
-##########success######################
-
 @user_passes_test(lambda u: not u.is_superuser, login_url='user_login')
 @never_cache
 @csrf_exempt
@@ -348,9 +279,6 @@ def success(request):
     return render(request, 'order_success.html')
 
 
-
-
-#########save_order############################
 
 @user_passes_test(lambda u: not u.is_superuser, login_url='user_login')
 def save_order(request):
@@ -444,16 +372,11 @@ def save_order(request):
     return redirect('order_success')
 
 
-##########order_success########################
-
 @user_passes_test(lambda u: not u.is_superuser, login_url='user_login')
 @never_cache
 def order_success(request):
     return render(request, 'order_success.html')
 
-
-
-#########wallet###########################
 
 @user_passes_test(lambda u: not u.is_superuser, login_url='user_login')
 @never_cache

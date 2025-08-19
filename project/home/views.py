@@ -1,79 +1,41 @@
 from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.cache import never_cache
-from .forms import CategoryForm, ProductForm, UserRegistrationForm
-from .models import Category, Product, CustomUser, Offer
+from .forms import CategoryForm, ProductForm, UserRegistrationForm, CouponForm, OfferForm, AddressForm
+from .models import Category, Product, CustomUser, Offer, Address 
 from cart.models import Cart
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 from django.contrib.auth.forms import AuthenticationForm
 from django.conf import settings as condrib_settings
 import random
-from django.contrib.auth.decorators import user_passes_test
 from django.contrib.admin.views.decorators import staff_member_required
 from django.urls import reverse
 from django.http import JsonResponse
-from orders.models import Order, OrderItem
 from cart.forms import CartUpdateForm
 from django.core.mail import send_mail
 from django.conf import settings
-import random
-from django.contrib.auth.decorators import user_passes_test
-from django.contrib.auth import update_session_auth_hash
 import re
-from django.shortcuts import render, redirect
-from .models import Address
-from .forms import AddressForm
-from django.shortcuts import render
-from .models import Address 
-from django.contrib import messages
-from django.contrib.auth import login
-from .forms import UserRegistrationForm
 from .utils import send_sms
-import random
-from django.db.models import Q
+from django.db.models import Sum, Count
 from django.core.exceptions import PermissionDenied
-from orders.models import Coupon, Wallet, Transaction, CancellationRequest
-from .forms import CouponForm, OfferForm
+from orders.models import Coupon, Wallet, Transaction, CancellationRequest, Order, OrderItem
 from wishlist.models import Wishlist
-from django.shortcuts import render
-from django.db.models import Sum
 from django.utils import timezone
-from django.contrib.admin.views.decorators import staff_member_required
-from django.views.decorators.cache import never_cache
-from datetime import datetime, timedelta
-from django.shortcuts import render
-from django.db.models import Sum
-from datetime import datetime, timedelta
-from django.contrib.admin.views.decorators import staff_member_required
-from django.views.decorators.cache import never_cache
-import io
-from orders.models import CancellationRequest
-import xlsxwriter # type: ignore
-from django.db.models import Sum
 from datetime import datetime, timedelta
 from django.db.models.functions import TruncMonth, TruncWeek, TruncDay, TruncHour
-from django.db.models import Count
 import string
 from django.template.loader import render_to_string
 import io
-from django.utils import timezone
 import time
 from openpyxl import Workbook
 
 
 
-#################not superuser###########################################################################################################################
 def is_not_superuser(user):
     return not user.is_superuser
 
-
-
-
-#############home  ####################################home ############################home############################3  
 
 @never_cache
 def home(request):
@@ -91,10 +53,6 @@ def home(request):
     return render(request, 'home.html', context)
 
 
-
-
-
-######shop######shop######shop######shop######shop######shop######shop######shop######shop
 
 @never_cache
 def shop(request):
@@ -123,30 +81,16 @@ def shop(request):
     return render(request, 'shop.html', {'products': products, 'categories': categories})
 
 
-
-
-
-######################about######################about######################about######################about#####
  
 @never_cache
 def about(request):
     return render(request, 'about.html')
    
    
-   
-   
-   
-####################customer_service####################customer_service####################customer_service#######
     
 @never_cache
 def customer_service(request):
     return render(request, 'contact.html')
-
-
-
-
-
-#########address#############################address###########################address########################################################
 
 
 @user_passes_test(is_not_superuser, login_url='user_login')
@@ -154,8 +98,6 @@ def customer_service(request):
 def address(request):
     addresses = Address.objects.filter(user=request.user).order_by('id')
     return render(request, 'addresses.html', {'addresses': addresses})
-
-
 
 
 
@@ -173,7 +115,6 @@ def add_address(request):
     else:
         form = AddressForm()
     return render(request, 'add_address.html', {'form': form})
-
 
 
 
@@ -197,13 +138,6 @@ def edit_address(request, address_id):
 
 
 
-
-
-
-
-
-
-
 @user_passes_test(is_not_superuser, login_url='user_login')
 def delete_address(request, address_id):
     address = Address.objects.get(pk=address_id)
@@ -211,18 +145,6 @@ def delete_address(request, address_id):
         address.delete()
         return redirect('address')  # Redirect to the address page after deletion
     return render(request, 'address.html', {'address': address})
-
-
-
-
-
-
-
- 
-###################################sigle product#######################sigle product########################sigle product############
-
-
-
 
 
 
@@ -261,14 +183,6 @@ def single_product(request, product_id):
 
 
 
-
-
-
-
-
-###########################account#########################account#############################account######################account########################################
-
-
 @user_passes_test(is_not_superuser, login_url='user_login')
 @never_cache
 def user_profile(request):
@@ -278,8 +192,6 @@ def user_profile(request):
     except Wallet.DoesNotExist:
         wallet = Wallet.objects.create(user=request.user, balance=0)
     return render(request, 'user_profile.html', {'user': user, 'wallet':wallet})
-
-
 
 
 
@@ -313,7 +225,6 @@ def change_password(request):
 
 
 
-
 def is_strong_password(password):
     if len(password) < 8:
         return False
@@ -326,9 +237,6 @@ def is_strong_password(password):
     if not re.search("[!@#$%^&*()_+=-]", password):
         return False
     return True
-
-
-
 
 
 
@@ -368,7 +276,6 @@ def validate_username(username):
 
 
 
-
 @login_required(login_url='user_login')
 def edit_first_name(request):
     if request.method == 'POST':
@@ -377,8 +284,6 @@ def edit_first_name(request):
             request.user.first_name = new_first_name
             request.user.save()
     return redirect('user_profile')
-
-
 
 
 
@@ -391,9 +296,6 @@ def edit_last_name(request):
             request.user.save()
     return redirect('user_profile')
 
-##################user register and login#########################user register and login#######user register and login########user register and login##########
-
-
 
 
 
@@ -403,8 +305,6 @@ def user_logout(request):
     logout(request)
     request.session.flush()
     return redirect('user_login')
-
-
 
 
 
@@ -431,8 +331,6 @@ def user_register(request):
     else:
         form = UserRegistrationForm()
     return render(request, 'user_register.html', {'form': form})
-
-
 
 
 @never_cache
@@ -472,9 +370,6 @@ def otp(request):
     else:
         return redirect('user_register')
 
-
-
-
 @never_cache
 def resend_otp(request):
     if 'user_data' in request.session:
@@ -493,8 +388,6 @@ def resend_otp(request):
     return JsonResponse({'success': False, 'message': 'User data not found in session.'})
 
 
-
-
 @never_cache
 def delete_otp(request):
     if 'otp' in request.session:
@@ -502,9 +395,6 @@ def delete_otp(request):
     if 'otp_timestamp' in request.session:
         del request.session['otp_timestamp']
     return JsonResponse({'success': True})
-
-
-
 
 
 def user_login(request):
@@ -532,16 +422,6 @@ def user_login(request):
         form = AuthenticationForm()
     
     return render(request, 'user_login.html', {'form': form, 'blocked': False})
-
-
-
-
-
-
-
-
-#####################admin dashboard################################admin dashboard##################admin dashboard#################admin dashboard############
-
 
 
 
@@ -606,13 +486,6 @@ def admin_dashboard(request):
     }
 
     return render(request, 'admin_dashboard.html', context)
-
-
-
-
-
-
-
 
 
 @staff_member_required(login_url='admin_login')
@@ -689,12 +562,6 @@ def generate_excel_data(orders, total_sales, products_sold_count, coupons_used_c
     return output
 
 
-
-
-
-
-########admin products##################admin products######################admin products######################admin products###############admin products##########################
-
 @staff_member_required(login_url='admin_login')
 @never_cache
 def admin_product(request):
@@ -705,10 +572,6 @@ def admin_product(request):
         products = products.filter(name__icontains=query)  
         
     return render(request, 'admin_product.html', {'products': products,'query': query})
-
-
-
-
 
 
 @staff_member_required(login_url='admin_login')
@@ -722,7 +585,6 @@ def add_product(request):
     else:
         form = ProductForm()
     return render(request, 'add_product.html', {'form': form})
-
 
 
 
@@ -742,9 +604,6 @@ def edit_product(request, product_id):
     return render(request, 'edit_product.html', {'form': form})
 
 
-
-
-
 @staff_member_required(login_url='admin_login')
 @require_POST
 def list_product(request, product_id):
@@ -752,7 +611,6 @@ def list_product(request, product_id):
     product.is_listed = True
     product.save()
     return redirect('admin_product')  
-
 
 
 @staff_member_required(login_url='admin_login')
@@ -765,28 +623,6 @@ def unlist_product(request, product_id):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#####admin categories ##########################admin categories #########################admin categories #################admin categories #####################
-
-
 @staff_member_required(login_url='admin_login')
 @never_cache
 def admin_categories(request):
@@ -794,8 +630,6 @@ def admin_categories(request):
 
     
     return render(request, 'admin_categories.html',  {'categories': categories})
-
-
 
 
 
@@ -813,9 +647,6 @@ def add_category(request):
 
 
 
-
-
-
 @staff_member_required(login_url='admin_login')
 @never_cache
 def edit_category(request, category_id):  
@@ -828,10 +659,6 @@ def edit_category(request, category_id):
     else:
         form = CategoryForm(instance=category)
     return render(request, 'edit_category.html', {'form': form})
-
-
-
-
 
 
 
@@ -854,25 +681,12 @@ def unlist_category(request, category_id):
     return redirect('admin_categories') 
 
 
-
-
-
-
-
-
-
-
-
-############admin users###################admin users##############admin users####################admin users##########################
 @staff_member_required(login_url='admin_login')
 def search_users(request):
     query = request.GET.get('query', '')
     users = CustomUser.objects.filter(username__icontains=query)
     
     return render(request, 'admin_users.html', {'users': users, 'query': query})
-
-
-
 
 
 
@@ -885,8 +699,6 @@ def block_user(request, user_id):
     return redirect('admin_users')
 
 
-
-
 @staff_member_required(login_url='admin_login')
 @never_cache
 def unblock_user(request, user_id):
@@ -894,8 +706,6 @@ def unblock_user(request, user_id):
     user.is_active = True
     user.save()
     return redirect('admin_users')
-
-
 
 
  
@@ -911,20 +721,6 @@ def admin_users(request):
     
     return render(request, 'admin_users.html', {'users': users, 'query': query})
   
-
-
-
-
-
-
-
-
-
-##################admin_orders###############admin_orders#################admin_orders############admin_orders############
-
-
-
-
 
 
 @staff_member_required(login_url='admin_login')
@@ -943,8 +739,6 @@ def admin_orders(request):
 
 
 
-
-
 @staff_member_required(login_url='admin_login')
 @never_cache
 def admin_order_items(request, order_id):
@@ -957,10 +751,6 @@ def admin_order_items(request, order_id):
         is_paid = razorpay_order.paid if razorpay_order else False    
 
     return render(request, 'admin_order_items.html', {'order': order, 'order_items': order_items,'is_paid': is_paid})
-
-
-
-
 
 
 
@@ -1002,12 +792,6 @@ def admin_change_order_status(request, item_id):
 
 
 
-
-
-#########cancellation request##########cancellation request###########cancellation request#############cancellation request############cancellation request##
-
-
-
 @staff_member_required(login_url='admin_login')
 def review_cancellation_requests(request):
     requests = CancellationRequest.objects.filter().order_by('-id')
@@ -1044,19 +828,11 @@ def approve_cancellation_request(request, request_id):
     return redirect('review_cancellation_requests')
 
 
-########admin coupon############admin coupon###################admin coupon##############admin coupon############admin coupon#################################################################
-
-
-
-
 
 @staff_member_required(login_url='admin_login')
 def admin_coupons(request):
     coupons = Coupon.objects.all().order_by('id')
     return render(request, 'admin_coupons.html', {'coupons': coupons})
-
-
-
 
 
 
@@ -1103,11 +879,6 @@ def edit_coupon(request, coupon_id):
 
 
 
-
-
-
-
-
 @staff_member_required(login_url='admin_login')
 def delete_coupon(request, coupon_id):
     coupon = get_object_or_404(Coupon, pk=coupon_id)
@@ -1115,19 +886,6 @@ def delete_coupon(request, coupon_id):
         coupon.delete()
         return redirect('admin_coupons')
     return render(request, 'delete_coupon.html', {'coupon': coupon})
-
-
-
-
-
-
-
-
-
-
-
-
-###########admin offers###########admin offers#################admin offers############admin offers###########admin offers###########################################
 
 
 
@@ -1181,37 +939,9 @@ def delete_offer(request, offer_id):
 
 
 
-
-
-
-
-
-##########sales report##########sales report########sales report##########sales report##########sales report##############sales report######sales report#######
-
-
-
-
-
 def sales_report(request):
    
     return render(request, 'sales_report.html')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-###########admin login ######################admin login ###################admin login ############################################
 
 
 
