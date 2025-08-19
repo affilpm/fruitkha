@@ -47,26 +47,57 @@
                 <div class="card-body">
                     <form method="post" novalidate>
                         {% csrf_token %}
+
                         <div class="form-group">
                             <label for="id_name">Name</label>
                             {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="text-danger">
+                                    {{ form.name.errors }}
+                                </div>
+                            {% endif %}
                         </div>
+
                         <div class="form-group">
                             <label for="id_description">Description</label>
                             {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">
+                                    {{ form.description.errors }}
+                                </div>
+                            {% endif %}
                         </div>
+
                         <div class="form-group">
                             <label for="id_discount_percentage">Discount Percentage</label>
                             {{ form.discount_percentage }}
+                            {% if form.discount_percentage.errors %}
+                                <div class="text-danger">
+                                    {{ form.discount_percentage.errors }}
+                                </div>
+                            {% endif %}
                         </div>
+
                         <div class="form-group">
                             <label for="id_start_date">Start Date</label>
                             {{ form.start_date }}
+                            {% if form.start_date.errors %}
+                                <div class="text-danger">
+                                    {{ form.start_date.errors }}
+                                </div>
+                            {% endif %}
                         </div>
+
                         <div class="form-group">
                             <label for="id_end_date">End Date</label>
                             {{ form.end_date }}
+                            {% if form.end_date.errors %}
+                                <div class="text-danger">
+                                    {{ form.end_date.errors }}
+                                </div>
+                            {% endif %}
                         </div>
+
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Add Offer
                         </button>
