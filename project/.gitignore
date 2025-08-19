@@ -1,2 +1,13 @@
+# Environment variables
 .env
-myvenv
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Django media files
+media/
+staticfiles/
+
+# Logs
+*.log
