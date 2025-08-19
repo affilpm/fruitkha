@@ -30,8 +30,9 @@ from django.template.loader import render_to_string
 import io
 import time
 from openpyxl import Workbook
+import logging
 
-
+logger = logging.getLogger('home')
 
 def is_not_superuser(user):
     return not user.is_superuser
@@ -42,7 +43,6 @@ def home(request):
     
     products = Product.objects.all()
     categories = Category.objects.all()
-
     products = Product.objects.filter(stock__gt=0)[:6]
     
     context = {
