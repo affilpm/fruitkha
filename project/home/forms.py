@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 import re
 from .models import Address
 from orders.models import Coupon
-
+from django.utils.timezone import now, localtime
 
 
 
@@ -162,12 +162,27 @@ class ProductForm(forms.ModelForm):
         model = Product
         fields = ['name', 'description', 'category', 'image1', 'image2', 'image3', 'price', 'stock', 'is_listed', 'offer', 'related_products']
         widgets = {
-            'stock': forms.TextInput(attrs={'placeholder': 'Enter stock (kg)', 'class': 'form-control'}),
-            'price': forms.TextInput(attrs={'placeholder': 'Enter price ($)', 'class': 'form-control'}),
+            'stock': forms.NumberInput(attrs={
+                'placeholder': 'Enter stock (kg)', 
+                'class': 'form-control', 
+                'min': '0'
+            }),
+            'price': forms.NumberInput(attrs={
+                'placeholder': 'Enter price ($)', 
+                'class': 'form-control', 
+                'step': '0.01',  # allows decimals
+                'min': '0'
+            }),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # Ensure required=True for all fields except offer & related_products
+        for field_name, field in self.fields.items():
+            if field_name not in ['offer', 'related_products', 'is_listed']:
+                field.required = True
+                
         self.fields['stock'].label += ' (kg)'
         self.fields['price'].label += ' ($)'
 
@@ -199,13 +214,44 @@ class CouponForm(forms.ModelForm):
         model = Coupon
         fields = ['code', 'discount_amount', 'minimum_required' ,'valid_from', 'valid_to', 'is_active']
         widgets = {
+            'code': forms.TextInput(attrs={'readonly': 'readonly'}),
             'valid_from': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'valid_to': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             
         }
         
+    def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            
+            self.fields['valid_from'].input_formats = ['%Y-%m-%d']
+            self.fields['valid_to'].input_formats = ['%Y-%m-%d']
+            
 
+    def clean(self):
+        cleaned_data = super().clean()
+        valid_from = cleaned_data.get('valid_from')
+        valid_to = cleaned_data.get('valid_to')
+        discount_amount = cleaned_data.get('discount_amount')
+        minimum_required = cleaned_data.get('minimum_required')
 
+        today = now().date()
+        
+        if valid_from:
+            if valid_from.date() < today and valid_from != getattr(self.instance, 'valid_from', None):
+                self.add_error('valid_from', "Start date cannot be in the past.")
+
+        if valid_to:
+            if valid_to.date() < today and valid_to != getattr(self.instance, 'valid_to', None):
+                self.add_error('valid_to', "End date cannot be in the past.")
+
+        if valid_from and valid_to and valid_to < valid_from:
+            self.add_error('valid_to', "End date must be after the start date.")
+        
+        if discount_amount and minimum_required:
+            if discount_amount >= minimum_required:
+                self.add_error('discount_amount', "Discount must be less than the minimum required amount.")
+            
+        return cleaned_data
 
 
 
@@ -226,11 +272,28 @@ class OfferForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         name = cleaned_data.get('name')
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+        
         if name:
             existing_offers = Offer.objects.filter(name__iexact=name)
             if self.instance and self.instance.pk:
                 existing_offers = existing_offers.exclude(pk=self.instance.pk)
             if existing_offers.exists():
                 self.add_error('name', 'An offer with this name already exists.')
+ 
+        today = now().date()
+
+        if start_date:
+            # Allow existing past dates, prevent new past dates
+            if start_date < today and start_date != getattr(self.instance, 'start_date', None):
+                self.add_error('start_date', "Start date cannot be in the past.")
+
+        if end_date:
+            if end_date < today and end_date != getattr(self.instance, 'end_date', None):
+                self.add_error('end_date', "End date cannot be in the past.")
+
+        if start_date and end_date and end_date < start_date:
+            self.add_error('end_date', "End date must be after the start date.")                
         return cleaned_data
 

@@ -1,25 +1,15 @@
-from django.shortcuts import render
-from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
+from django.shortcuts import render, redirect, HttpResponse, get_object_or_404, reverse
 from django.contrib.auth.decorators import user_passes_test
 from django.http import JsonResponse
 from .models import Cart
 from home.models import Product
 from .forms import CartUpdateForm
-from django.contrib.auth.decorators import user_passes_test
 from django.views.decorators.cache import never_cache
-# Create your views here.
 
 
-
-#################not superuser###########################################################################################################################
 def is_not_superuser(user):
     return not user.is_superuser
-###########cart#####################cart######################cart##############################cart####################cart################
   
-
-
-
- 
 
 @user_passes_test(is_not_superuser, login_url='user_login')
 @never_cache
@@ -69,12 +59,6 @@ def cart(request):
     return render(request, 'cart.html', {'cart_items': cart_items, 'form': form, 'total_cost': total_cost})
 
 
-from django.shortcuts import redirect, reverse
-
-
-
-
-
 
 @user_passes_test(is_not_superuser, login_url='user_login')
 @never_cache
@@ -88,7 +72,6 @@ def add_to_cart(request):
         return redirect(reverse('single_product', args=[product_id]))
     else:
         pass
-
 
 
 

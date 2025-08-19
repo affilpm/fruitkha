@@ -16,22 +16,13 @@ from .models import Wishlist
 
 
 
-#################not superuser###########################################################################################################################
 def is_not_superuser(user):
     return not user.is_superuser
-
-
-
-
 
 
 def wishlist(request):
     wishlist_items = Wishlist.objects.filter(user=request.user) 
     return render(request, 'wishlist.html', {'wishlist_items': wishlist_items})
-
-
-
-
 
 
 @user_passes_test(lambda u: not u.is_superuser, login_url='user_login')
@@ -41,8 +32,6 @@ def add_to_wishlist(request):
         product = Product.objects.get(id=product_id)
         Wishlist.objects.get_or_create(user=request.user, product=product)
         return redirect('single_product', product_id=product.id)
-    
-    
     
 
 @user_passes_test(lambda u: not u.is_superuser, login_url='user_login')
@@ -54,12 +43,6 @@ def remove_from_wishlist(request):
         wishlist_item.delete()
         return redirect('single_product', product_id=product.id)
        
-
-
-
-
-
-
 
 @user_passes_test(lambda u: not u.is_superuser, login_url='user_login')
 @never_cache

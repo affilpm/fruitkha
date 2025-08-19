@@ -72,47 +72,57 @@
                         <p>Login to purchase</p>
                         {%endif%}
                         <p><strong>Category:</strong> {{ product.category }}</p>
-                        <div class="action-buttons">
+                        <div class="action-buttons d-flex gap-2 mt-3">
+
                             {% if not user.is_superuser %}
-                            {% if user.id %}
-                                {% if not out_of_stock %}
-                                {% if product_in_cart %}
-                                <a href="{% url 'cart' %}" class="cart-btn btn btn-primary">
-                                    <i class="fas fa-shopping-cart"></i> View Cart
-                                </a>
-                            {% else %}
-                                <form action="{% url 'add_to_cart' %}" method="post" id="cartForm" onsubmit="return validateCart()">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="product_id" value="{{ product.id }}">
-                                    <button type="submit" class="cart-btn btn btn-primary" id="addToCartBtn" {% if not user.is_authenticated %}onclick="return promptSignIn(event)" {% endif %}>
+
+                                {% if user.is_authenticated %}
+                                    {% if not out_of_stock %}
+                                        
+                                        {# --- CART BUTTON --- #}
+                                        {% if product_in_cart %}
+                                            <a href="{% url 'cart' %}" class="cart-btn btn btn-primary px-4 py-2 rounded-2 shadow-sm">
+                                                <i class="fas fa-shopping-cart"></i> View Cart
+                                            </a>
+                                        {% else %}
+                                            <form action="{% url 'add_to_cart' %}" method="post" id="cartForm" onsubmit="return validateCart()">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="product_id" value="{{ product.id }}">
+                                                <button type="submit" class="cart-btn btn btn-primary px-4 py-2 rounded-2 shadow-sm" id="addToCartBtn">
+                                                    <i class="fas fa-shopping-cart"></i> Add to Cart
+                                                </button>
+                                            </form>
+                                        {% endif %}
+
+                                        {# --- WISHLIST BUTTON --- #}
+                                        <form action="{% if product_in_wishlist %}{% url 'remove_from_wishlist' %}{% else %}{% url 'add_to_wishlist' %}{% endif %}" 
+                                            method="post" id="wishlistForm">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                                            <button type="submit" class="wishlist-action-btn btn btn-outline-danger px-4 py-2 rounded-2 shadow-sm" id="wishlistBtn">
+                                                {% if product_in_wishlist %}
+                                                    <i class="fas fa-heart"></i> Remove from Wishlist
+                                                {% else %}
+                                                    <i class="far fa-heart"></i> Add to Wishlist
+                                                {% endif %}
+                                            </button>
+                                        </form>
+
+                                    {% else %}
+                                        <p class="out-of-stock text-danger fw-bold mt-2">This product is currently out of stock.</p>
+                                    {% endif %}
+                                
+                                {% else %}
+                                    {# --- User not logged in (both buttons redirect to sign-in) --- #}
+                                    <button class="cart-btn btn btn-primary px-4 py-2 rounded-2 shadow-sm" onclick="return promptSignIn(event)">
                                         <i class="fas fa-shopping-cart"></i> Add to Cart
                                     </button>
-                                </form>
-                            {% endif %}
-                            
-                            
-                                {% else %}
-                                    <p class="out-of-stock">This product is currently out of stock.</p>
+                                    <button class="wishlist-action-btn btn btn-outline-danger px-4 py-2 rounded-2 shadow-sm" onclick="return promptSignIn(event)">
+                                        <i class="far fa-heart"></i> Add to Wishlist
+                                    </button>
                                 {% endif %}
-                            {% endif %}
-                        
-                            {% if user.id %}
-                                {% if not out_of_stock %}
-                                    <form action="{% if product_in_wishlist %}{% url 'remove_from_wishlist' %}{% else %}{% url 'add_to_wishlist' %}{% endif %}" method="post" id="wishlistForm">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="product_id" value="{{ product.id }}">
-                                        <button type="submit" class="wishlist-btn btn btn-info btn-sm" id="wishlistBtn" {% if not user.is_authenticated %}onclick="return promptSignIn(event)" {% endif %}>
-                                            {% if product_in_wishlist %}
-                                                <i class="fas fa-heart"></i> Remove from Wishlist
-                                            {% else %}
-                                                <i class="far fa-heart"></i> Add to Wishlist
-                                            {% endif %}
-                                        </button>
-                                    </form>
-                                {% endif %}
-                            {% endif %}
-                            {% endif %}
 
+                            {% endif %}
                         </div>
                         
                            
