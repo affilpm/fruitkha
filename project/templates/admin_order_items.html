@@ -77,15 +77,21 @@
                                     {{ item.total_price }} 
                                 {% endif %}</td> </td>
                                 <td>
+                                {% if item.status != "Cancelled" %}
                                     <form action="{% url 'admin_change_order_status' item.id %}" method="post">
                                         {% csrf_token %}
                                         <select name="status" class="form-control mb-2">
                                             {% for status, status_display in item.ORDER_STATUS_CHOICES %}
-                                                <option value="{{ status }}" {% if item.status == status %}selected{% endif %}>{{ status_display }}</option>
+                                                <option value="{{ status }}" {% if item.status == status %}selected{% endif %}>
+                                                    {{ status_display }}
+                                                </option>
                                             {% endfor %}
                                         </select>
                                         <button type="submit" class="btn btn-primary">Update Status</button>
                                     </form>
+                                {% else %}
+                                    <span class="badge bg-danger">Order Cancelled</span>
+                                {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
