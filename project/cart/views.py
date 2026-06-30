@@ -72,6 +72,10 @@ def add_to_cart(request):
         if not created:
             cart_item.quantity += 1
             cart_item.save()
+            
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'success', 'message': 'Added to cart'})
+            
         return redirect(reverse('single_product', args=[product_id]))
     else:
         pass

@@ -31,6 +31,10 @@ def add_to_wishlist(request):
         product_id = request.POST.get('product_id')
         product = Product.objects.get(id=product_id)
         Wishlist.objects.get_or_create(user=request.user, product=product)
+        
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'success', 'action': 'added'})
+            
         return redirect('single_product', product_id=product.id)
     
 
@@ -41,6 +45,10 @@ def remove_from_wishlist(request):
         product = Product.objects.get(id=product_id)
         wishlist_item = Wishlist.objects.get(user=request.user, product=product)
         wishlist_item.delete()
+        
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'success', 'action': 'removed'})
+            
         return redirect('single_product', product_id=product.id)
        
 
