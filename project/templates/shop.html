@@ -20,21 +20,33 @@
 <div class="product-section mt-5 mb-5">
     <div class="container">
         <!-- Search Bar and Product Heading -->
-        <div class="sticky-header mt-100 mb-100">
+        <div class="sticky-header mt-5 mb-3 mb-lg-5">
             <div class="container">
-                <div class="search-bar">
-					<form method="get" action="{% url 'shop' %}" class="form-inline justify-content-center">
-                        <input type="text" class="form-control form-control-lg mr-2" name="search_name" placeholder="Search by product name" value="{{ search_name|default:'' }}" style="width: 80%;">
-                        <button type="submit" class="btn btn-primary btn-lg">Search</button>
-                    </form>
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-8 col-lg-6">
+                        <form method="get" action="{% url 'shop' %}" class="d-flex w-100 shadow-sm rounded-pill overflow-hidden" style="border: 2px solid var(--brand-primary); height: 50px;">
+                            <input type="text" class="form-control border-0 px-4" name="search_name" placeholder="Search by product name..." value="{{ search_name|default:'' }}" style="box-shadow: none; border-radius: 0; outline: none; background: transparent; height: 100%;">
+                            <button type="submit" class="btn btn-primary px-4 border-0 d-flex align-items-center justify-content-center" style="border-radius: 0; font-weight: 600; height: 100%; white-space: nowrap;">
+                                <i class="fas fa-search mr-2"></i> Search
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="row">
             <!-- Sidebar for Filtering Options -->
-            <div class="col-lg-3" id="filter-sidebar">
-                <div class="sidebar">
+            <div class="col-lg-3 mb-4" style="clear: both; overflow: hidden; height: auto;">
+                <!-- Mobile Filter Toggle -->
+                <div class="text-center mb-3 mobile-filter-btn">
+                    <button id="filterToggleBtn" class="btn btn-primary rounded-pill px-4 py-2 w-100 shadow-sm" type="button" aria-expanded="false" aria-controls="sidebarCollapse" style="font-weight: 600;">
+                        <i class="fas fa-sliders-h me-2"></i> Filter Products
+                    </button>
+                </div>
+                
+                <div class="filter-sidebar-container" id="sidebarCollapse">
+                <div class="sidebar" id="filter-sidebar">
                     <form id="filter-form" method="GET">
                         <!-- Filter by Category -->
                         <div class="filter-category mb-4">
@@ -77,20 +89,24 @@
                     </form>
                 </div>
             </div>
+            </div>
             <!-- End Sidebar -->
 
+            <!-- Mobile Boundary Separator -->
+            <div class="col-12 d-lg-none" style="clear: both; height: 1px; margin-bottom: 40px; display: block; width: 100%;"></div>
+
             <!-- Product Listings -->
-            <div class="col-lg-9" id="product-listings">
+            <div class="col-12 col-lg-9" id="product-listings" style="clear: both;">
                 <div class="row">
                     {% for product in products %}
-                    <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="col-12 col-sm-6 col-lg-4 mb-4">
                         <div class="single-product-item {% if product.stock <= 0 %}out-of-stock-card{% endif %}">
                         {% if product.stock <= 0 %}
                         <div class="out-of-stock-badge">Out of Stock</div>
                         {% endif %}
-                        <div class="product-image">
-                                <a href="{% url 'single_product' product.id %}">
-                                    <img src="{{ product.image1.url }}" alt="{{ product.name }}" width="200" height="200">
+                        <div class="product-image" style="text-align: center; overflow: hidden; border-radius: 12px; aspect-ratio: 1 / 1;">
+                                <a href="{% url 'single_product' product.id %}" class="d-block w-100 h-100">
+                                    <img src="{{ product.image1.url }}" alt="{{ product.name }}" class="img-fluid w-100 h-100" style="object-fit: cover;">
                                 </a>
                             </div>
                             <h3>{{ product.name }}</h3>
@@ -119,7 +135,7 @@
         position: -webkit-sticky;
         position: sticky;
         top: 120px;
-        height: calc(100vh - 120px);
+        max-height: calc(100vh - 120px);
         overflow-y: auto;
         padding-right: 15px;
     }
@@ -236,15 +252,25 @@
 
     /* Responsive Design */
     @media (max-width: 991.98px) {
+        .mobile-flex-col {
+            display: flex !important;
+            flex-direction: column !important;
+        }
         #filter-sidebar {
-            position: relative;
-            height: auto;
-            overflow-y: visible;
-            padding-right: 0;
-            margin-bottom: 30px; 
+            position: static !important;
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+            margin-bottom: 20px !important;
+        }
+        #sidebarCollapse {
+            clear: both !important;
+            width: 100% !important;
         }
         #product-listings {
-            margin-top: 20px;
+            clear: both !important;
+            position: static !important;
+            width: 100% !important;
         }
     }
 
@@ -292,32 +318,39 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        const filterSidebar = document.getElementById("filter-sidebar");
-        const productListings = document.getElementById("product-listings");
-
-        function adjustLayout() {
-            if (window.innerWidth < 992) {
-                filterSidebar.style.position = "relative";
-                filterSidebar.style.height = "auto";
-                filterSidebar.style.overflowY = "visible";
-                productListings.style.marginTop = "20px";
-            } else {
-                filterSidebar.style.position = "sticky";
-                filterSidebar.style.top = "120px";
-                filterSidebar.style.height = "calc(100vh - 120px)";
-                filterSidebar.style.overflowY = "auto";
-                productListings.style.marginTop = "0";
-            }
-        }
-
-        window.addEventListener("resize", adjustLayout);
-        adjustLayout();
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
         var form = document.getElementById('filter-form');
         var currentUrl = window.location.href;
         form.action = currentUrl;
+
+        var toggleBtn = document.getElementById('filterToggleBtn');
+        var sidebar = document.getElementById('sidebarCollapse');
+        var filterBtn = document.querySelector('.mobile-filter-btn');
+        var sidebarOpen = false;
+
+        function applyLayout() {
+            if (window.innerWidth < 992) {
+                // Mobile: hide sidebar, show toggle button
+                sidebar.style.display = sidebarOpen ? 'block' : 'none';
+                if (filterBtn) filterBtn.style.display = 'flex';
+            } else {
+                // Desktop: always show sidebar, hide toggle button
+                sidebar.style.display = 'block';
+                if (filterBtn) filterBtn.style.display = 'none';
+            }
+        }
+
+        // Toggle button click
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                sidebarOpen = !sidebarOpen;
+                sidebar.style.display = sidebarOpen ? 'block' : 'none';
+                toggleBtn.setAttribute('aria-expanded', sidebarOpen ? 'true' : 'false');
+            });
+        }
+
+        // Apply on load and resize
+        applyLayout();
+        window.addEventListener('resize', applyLayout);
     });
 </script>
 
