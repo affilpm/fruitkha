@@ -38,11 +38,19 @@
     </style>
     <body>
       <div class="card">
-      <div style="border-radius:200px; height:200px; width:200px; background: #F8FAF5; margin:0 auto;">
-        <i class="checkmark">✓</i>
-      </div>
+      {% if refunded %}
+        <div style="border-radius:200px; height:200px; width:200px; background: #FEF2F2; margin:0 auto; display:flex; align-items:center; justify-content:center;">
+          <i style="color: #EF4444; font-size: 80px; line-height: normal; margin: 0; font-style: normal;">✗</i>
+        </div>
+        <h1 style="color: #EF4444;">Order Cancelled</h1> 
+        <p>An item went out of stock during payment.<br/>Your order was cancelled and the full amount<br/>has been refunded to your Wallet.</p>
+      {% else %}
+        <div style="border-radius:200px; height:200px; width:200px; background: #F8FAF5; margin:0 auto;">
+          <i class="checkmark">✓</i>
+        </div>
         <h1>Success</h1> 
         <p>We received your purchase request;<br/> we'll be in touch shortly!</p>
+      {% endif %}
       </div>
 
       <script>

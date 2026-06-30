@@ -19,7 +19,8 @@
 <!-- End Breadcrumb Section -->
 
 <!-- Checkout Section -->
-<div class="container mt-5">
+<div class="container mt-5 checkout-container">
+
     <div class="row">
         <!-- Shipping Address Section -->
         <div class="col-lg-8">
@@ -233,5 +234,94 @@
     });
 </script>
 
+
+<style>
+    .checkout-container .card {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        background: #fff;
+        margin-bottom: 30px !important;
+    }
+    .checkout-container .card-header.bg-primary {
+        background: transparent !important;
+        border-bottom: 2px solid #f3f4f6;
+        color: var(--brand-dark, #051922) !important;
+        font-weight: 700;
+        font-size: 1.25rem;
+        padding: 20px 25px;
+    }
+    .checkout-container .card-body {
+        padding: 25px;
+    }
+    
+    /* Buttons */
+    .checkout-container .btn {
+        border-radius: 30px;
+        padding: 10px 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .checkout-container .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+    }
+    .checkout-container .btn-success {
+        background: #10b981 !important;
+    }
+    .checkout-container .btn-primary {
+        background: linear-gradient(135deg, var(--brand-primary, #f28123), var(--brand-primary-hover, #e0701b)) !important;
+    }
+    .checkout-container .btn-danger {
+        background: #ef4444 !important;
+    }
+    
+    /* Tables */
+    .checkout-container .table-striped tbody tr:nth-of-type(odd) {
+        background-color: #f9fafb;
+    }
+    .checkout-container .table th {
+        border-top: none;
+        border-bottom: 2px solid #f3f4f6;
+        color: #6b7280;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+    }
+    .checkout-container .table td {
+        vertical-align: middle;
+        font-weight: 500;
+        border-top: 1px solid #f3f4f6;
+        color: #374151;
+    }
+    
+    /* Inputs */
+    .checkout-container .form-control {
+        border-radius: 10px;
+        border: 2px solid #e5e7eb;
+        padding: 10px 15px;
+        transition: all 0.3s ease;
+        height: auto;
+        min-height: 48px;
+    }
+    .checkout-container .form-control:focus {
+        border-color: var(--brand-primary, #f28123);
+        box-shadow: 0 0 0 3px rgba(242, 129, 35, 0.2);
+    }
+    
+    /* Radio Buttons */
+    .checkout-container input[type="radio"] {
+        accent-color: var(--brand-primary, #f28123);
+        transform: scale(1.2);
+        margin-right: 8px;
+    }
+    .checkout-container label {
+        font-weight: 600;
+        color: #374151;
+        cursor: pointer;
+    }
+</style>
 
 {% endblock %}

@@ -226,7 +226,11 @@ def razorpay_view(request):
     if request.method == 'POST':
         cart_items = Cart.objects.filter(user=request.user)
         if not cart_items.exists():
-            return Decimal('0.00') 
+            return redirect('checkout') 
+
+        for item in cart_items:
+            if item.quantity > item.product.stock:
+                return redirect('cart')
 
         subtotal = Decimal('0.00')
         discount_amount = Decimal('0.00')
@@ -276,6 +280,44 @@ def success(request):
             razorpay_order.paid = True
             razorpay_order.save()
             
+            # Post-payment stock validation
+            try:
+                order = Order.objects.get(razorpay_order=razorpay_order)
+            except Order.DoesNotExist:
+                return redirect(reverse('home'))
+                
+            out_of_stock = False
+            for item in order.items.all():
+                if item.quantity_ordered > item.product.stock:
+                    out_of_stock = True
+                    break
+                    
+            if out_of_stock:
+                # Cancel the order items
+                for item in order.items.all():
+                    item.status = 'Cancelled'
+                    item.save()
+                    
+                # Refund to Wallet
+                wallet, _ = Wallet.objects.get_or_create(user=order.user)
+                wallet.balance += order.total_cost
+                wallet.save()
+                
+                # Record transaction
+                Transaction.objects.create(
+                    user=order.user,
+                    amount=order.total_cost,
+                    transaction_type='Refund',
+                    order=order
+                )
+                
+                return render(request, 'order_success.html', {'refunded': True, 'order': order})
+            else:
+                # Everything is in stock, deduct it now
+                for item in order.items.all():
+                    item.product.stock -= item.quantity_ordered
+                    item.product.save()
+
             return render(request, 'order_success.html')
         else:
             return redirect(reverse('home'))
@@ -290,6 +332,10 @@ def save_order(request):
         cart_items = Cart.objects.filter(user=request.user)
         if not cart_items.exists():
             return redirect('checkout')
+
+        for item in cart_items:
+            if item.quantity > item.product.stock:
+                return redirect('cart')
 
         shipping_address_id = request.POST.get('selected-address')
         address = Address.objects.filter(user=request.user, id=shipping_address_id).first()
@@ -362,8 +408,10 @@ def save_order(request):
                     total_price=product_price * cart_item.quantity,
                     offer=cart_item.product.offer
                 )
-                cart_item.product.stock -= cart_item.quantity
-                cart_item.product.save()
+                
+                if payment_method == 'cash_on_delivery':
+                    cart_item.product.stock -= cart_item.quantity
+                    cart_item.product.save()
 
             cart_items.delete()
             if 'coupon_id' in request.session:
