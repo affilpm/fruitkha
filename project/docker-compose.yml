@@ -10,13 +10,15 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "5433:5432"
 
   web:
     build: .
     command: gunicorn project.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - .:/app
+      - /var/www/fruitkha-assets:/app/assets   # Mount static to host
+      - /var/www/fruitkha-media:/app/media     # Mount media to host      
     ports:
       - "8000:8000"
     depends_on:

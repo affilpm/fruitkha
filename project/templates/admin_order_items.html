@@ -1,146 +1,115 @@
 {% extends 'admin_base.html' %}
 {% load static %}
 {% block content %}
-<!-- Toggle button for sidebar -->
-<div class="d-flex">
-    <div class="sidebar bg-black" id="sidebar">
-        <div class="list-group">
-            <a href="{% url 'admin_dashboard' %}" class="list-group-item list-group-item-action">
-                <img src="{% static 'assets/images/icons8-dashboard-layout-32.png' %}" alt="Dashboard Logo" class="logo"> <span class="sidebar-text">Dashboard</span>
-            </a>
-            <a href="{% url 'admin_users' %}" class="list-group-item list-group-item-action">
-                <img src="{% static 'assets/images/icons8-users-32.png' %}" alt="Users Logo" class="logo"> <span class="sidebar-text">Users</span>
-            </a>
-            <a href="{% url 'admin_categories' %}" class="list-group-item list-group-item-action ">
-                <img src="{% static 'assets/images/icons8-categorize-32.png' %}" alt="Categories Logo" class="logo"> <span class="sidebar-text">Categories</span>
-            </a>
-            <a href="{% url 'admin_product' %}" class="list-group-item list-group-item-action">
-                <img src="{% static 'assets/images/icons8-products-32.png' %}" alt="Products Logo" class="logo"> <span class="sidebar-text">Products</span>
-            </a>
-            <a href="{% url 'admin_orders' %}" class="list-group-item list-group-item-action active">
-                <img src="{% static 'assets/images/icons8-logistics-32.png' %}" alt="Orders Logo" class="logo"> <span class="sidebar-text">Orders</span>
-            </a>
-            <a href="{% url 'admin_coupons' %}" class="list-group-item list-group-item-action ">
-                <img src="{% static 'assets/images/icons8-coupon-32.png' %}" alt="Coupons Logo" class="logo"> <span class="sidebar-text">Coupons</span>
-            </a>
-            <a href="{% url 'admin_offers' %}" class="list-group-item list-group-item-action ">
-                <img src="{% static 'assets/images/icons8-sale-32.png' %}" alt="Coupons Logo" class="logo"> <span class="sidebar-text">Offers</span>
-            </a>
-            <a href="{% url 'review_cancellation_requests' %}" class="list-group-item list-group-item-action ">
-                <img src="{% static 'assets/images/icons8-sale-32.png' %}" alt="Coupons Logo" class="logo"> <span class="sidebar-text">Cancellation request</span>
-            </a>
-         
-        </div>
-        <div class="mt-auto text-center ">
-            <button class="btn btn-primary mb-3" id="sidebarToggle"><img src="{% static 'assets/images/icons8-repeat-48.png' %}" alt="Coupons Logo" class="logo"></button>
-        </div>
-    </div>
-</div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h4 mb-0">Order #{{ order.id }} — Items</h2>
+    <a href="{% url 'admin_orders' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left mr-1"></i> Back to Orders
+    </a>
 </div>
 
-
-
-<div class="main-content">
-    <div class="container mt-5">
-        <div class="card ">
-            <div class="card-header">
-                <h3 class="mb-0">Order Items</h3>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped text-center">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Image</th>
-                                <th>Product</th>
-                                <th>Quantity</th>
-                                <th>Price</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in order_items %}
-                            <tr>
-                                <td>{{ item.id }}</td>
-                                <td>
-                                    <img src="{{ item.product.image1.url }}" alt="{{ item.product.name }}" class="img-thumbnail" style="max-width: 70px; height: 70;">
-                                </td>
-                                <td>{{ item.product.name }}</td>
-                                
-                                <td>{{ item.quantity_ordered }}</td>
-                                <td>
-                                {% if item.product.offer %}
-                                    <del>₹{{ item.original_price_total}}</del>
-                                    ₹{{ item.total_price }}
-                                {% else %}
-                                    {{ item.total_price }} 
-                                {% endif %}</td> </td>
-                                <td>
-                                {% if item.status != "Cancelled" %}
-                                    <form action="{% url 'admin_change_order_status' item.id %}" method="post">
-                                        {% csrf_token %}
-                                        <select name="status" class="form-control mb-2">
+<!-- Order Items Table -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover text-center mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Image</th>
+                        <th>Product</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order_items %}
+                    <tr>
+                        <td>{{ item.id }}</td>
+                        <td>
+                            <img src="{{ item.product.image1.url }}" alt="{{ item.product.name }}" class="img-thumbnail" style="max-width: 60px; height: 60px; object-fit: cover;">
+                        </td>
+                        <td class="font-weight-bold">{{ item.product.name }}</td>
+                        <td>{{ item.quantity_ordered }}</td>
+                        <td>
+                            {% if item.product.offer %}
+                                <del class="text-muted small">₹{{ item.original_price_total }}</del>
+                                <span class="text-success font-weight-bold">₹{{ item.total_price }}</span>
+                            {% else %}
+                                ₹{{ item.total_price }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.status != "Cancelled" %}
+                                <form action="{% url 'admin_change_order_status' item.id %}" method="post">
+                                    {% csrf_token %}
+                                    <div class="d-inline-flex align-items-center">
+                                        <select name="status" class="form-control form-control-sm mr-2" style="width:auto;">
                                             {% for status, status_display in item.ORDER_STATUS_CHOICES %}
                                                 <option value="{{ status }}" {% if item.status == status %}selected{% endif %}>
                                                     {{ status_display }}
                                                 </option>
                                             {% endfor %}
                                         </select>
-                                        <button type="submit" class="btn btn-primary">Update Status</button>
-                                    </form>
-                                {% else %}
-                                    <span class="badge bg-danger">Order Cancelled</span>
-                                {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div class="card mt-3">
-            <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-4">
-                            <h5>Order Details</h5>
-                            <p><strong>Order Date:</strong> {{ order.order_date }}</p>
-                            <p><strong>Subtotal:</strong> ₹{{ order.subtotal }}</p>
-                            {% if order.coupon %}
-                            <p><strong>Coupon Applied:</strong> {{ order.coupon.code }}</p>
-                            <p><strong>Coupon Discount:</strong> ₹{{ order.coupon.discount_amount }}</p>
+                                        <button type="submit" class="btn btn-primary btn-sm">Update</button>
+                                    </div>
+                                </form>
+                            {% else %}
+                                <span class="badge badge-danger px-2 py-1">Cancelled</span>
                             {% endif %}
-                            <p><strong>Total Amount Paid:</strong> ₹{{ order.total_cost }}</p>
-                            <p><strong>Payment Method:</strong> {{ order.payment_method }}</p>
-                            {% if order.payment_method.lower == 'razorpay' %}
-                            <p><strong>Razorpay Payment Status:</strong> {% if is_paid %}Paid{% else %}<span class="failed-status text-danger">Not paid</span>{% endif %}</p>
-                            {%endif%}
-                            {% if transaction_amount %}
-                                <div class="alert alert-success" role="alert">
-                                    <strong>Refunded amount:</strong> ₹{{ transaction_amount }} has been refunded to your account.
-                                </div>
-                            {% endif %}
-        
-                           
-                        </div>
-                        <div class="col-md-6">
-                            <h5>Shipping Address</h5>
-                            <p><strong>Name:</strong> {{ order.shipping_address.name }}</p>
-                            <p><strong>Phone:</strong> {{ order.shipping_address.phone_number }}</p>
-                            <p><strong>Address:</strong> {{ order.shipping_address.street }}, {{ order.shipping_address.city }}, {{ order.shipping_address.state }}, {{ order.shipping_address.country }}, {{ order.shipping_address.postal_code }}
-                        </div>
-                    </div>
-            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-    </div>
-    <div class="text-center mt-3 bg-dark">
-        <a href="{% url 'admin_orders' %}" class="btn btn-secondary">Back to Orders</a>
     </div>
 </div>
 
-
-
-
-
+<!-- Order Details & Shipping -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header"><i class="fas fa-receipt mr-2"></i>Order Details</div>
+            <div class="card-body">
+                <p><strong>Order Date:</strong> {{ order.order_date|date:"M d, Y H:i" }}</p>
+                <p><strong>Subtotal:</strong> ₹{{ order.subtotal }}</p>
+                {% if order.coupon %}
+                <p><strong>Coupon:</strong> <code>{{ order.coupon.code }}</code> (–₹{{ order.coupon.discount_amount }})</p>
+                {% endif %}
+                <p><strong>Total Paid:</strong> <span class="h5 text-success">₹{{ order.total_cost }}</span></p>
+                <p><strong>Payment:</strong> {{ order.payment_method }}</p>
+                {% if order.payment_method.lower == 'razorpay' %}
+                <p><strong>Razorpay Status:</strong>
+                    {% if is_paid %}
+                        <span class="badge badge-success">Paid</span>
+                    {% else %}
+                        <span class="badge badge-danger">Not Paid</span>
+                    {% endif %}
+                </p>
+                {% endif %}
+                {% if transaction_amount %}
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="fas fa-undo mr-1"></i> <strong>Refunded:</strong> ₹{{ transaction_amount }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header"><i class="fas fa-map-marker-alt mr-2"></i>Shipping Address</div>
+            <div class="card-body">
+                <p><strong>Name:</strong> {{ order.shipping_address.name }}</p>
+                <p><strong>Phone:</strong> {{ order.shipping_address.phone_number }}</p>
+                <p><strong>Address:</strong><br>
+                    {{ order.shipping_address.street }}<br>
+                    {{ order.shipping_address.city }}, {{ order.shipping_address.state }}<br>
+                    {{ order.shipping_address.country }} – {{ order.shipping_address.postal_code }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -4,102 +4,166 @@
 {% block content %}
 
 <!-- Breadcrumb section -->
-<div class="breadcrumb-section breadcrumb-bg" style="margin-bottom: 20px;">
+<div class="breadcrumb-section breadcrumb-bg" style="margin-bottom: 0;">
     <div class="container">
         <div class="row">
             <div class="col-lg-8 offset-lg-2 text-center">
                 <div class="breadcrumb-text">
-                    <p>See more Details</p>
-                    <h1>Account</h1>
+                    <p>Manage Your Account</p>
+                    <h1>My Account</h1>
                 </div>
             </div>
         </div>
     </div>
-</div>  
+</div>
 
-    
-      <!-- Navigation bar -->
-      <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="#">Your Profile</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item active">
-                        <a class="nav-link" href="{% url 'user_profile' %}">Profile</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'orders'%}">Orders</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'wallet' %}">Wallet</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'wishlist' %}">Wishlist</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'address' %}">Addresses</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-   
-    <!-- Profile and Wallet section -->
+<!-- Account Navigation Tabs -->
+<div class="account-nav-section">
     <div class="container">
-        <div class="row justify-content-center">
-            <!-- Profile section -->
-            <div class="col-md-8">
-                <div class="card profile-card">
-                    <div class="card-body">
-                        <h2>Your Profile</h2>
-                        <div class="profile-info">
-                            <p><strong>Username:</strong> {{ user.username }} <button class="btn btn-primary edit-btn" data-toggle="modal" data-target="#editUsernameModal">Edit</button></p>
-                            <div class="divider"></div>
-                            <p><strong>First Name:</strong> {{ user.first_name }} <button class="btn btn-primary edit-btn" data-toggle="modal" data-target="#editFirstNameModal">Edit</button></p>
-                            <div class="divider"></div>
-                            <p><strong>Last Name:</strong> {{ user.last_name }} <button class="btn btn-primary edit-btn" data-toggle="modal" data-target="#editLastNameModal">Edit</button></p>
-                            <div class="divider"></div>
-                            <p><strong>Email:</strong> {{ user.email }}</p>
-                            <div class="divider"></div>
-                            <p><strong>Phone:</strong> {{ user.phone }}</p>
+        <ul class="account-nav-tabs">
+            <li class="account-nav-item active">
+                <a href="{% url 'user_profile' %}">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </a>
+            </li>
+            <li class="account-nav-item">
+                <a href="{% url 'orders' %}">
+                    <i class="fas fa-box"></i>
+                    <span>Orders</span>
+                </a>
+            </li>
+            <li class="account-nav-item">
+                <a href="{% url 'wallet' %}">
+                    <i class="fas fa-wallet"></i>
+                    <span>Wallet</span>
+                </a>
+            </li>
+            <li class="account-nav-item">
+                <a href="{% url 'wishlist' %}">
+                    <i class="fas fa-heart"></i>
+                    <span>Wishlist</span>
+                </a>
+            </li>
+            <li class="account-nav-item">
+                <a href="{% url 'address' %}">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Addresses</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- Profile Content -->
+<div class="account-content-section">
+    <div class="container">
+        <div class="row">
+            <!-- Profile Card -->
+            <div class="col-lg-8 mb-4">
+                <div class="account-card">
+                    <div class="account-card-header">
+                        <div class="account-card-header-icon">
+                            <i class="fas fa-id-card"></i>
                         </div>
-                        <!-- Card footer -->
-                        <div class="card-footer">
-                            <button class="btn btn-secondary mr-2" onclick="location.href='{% url 'home' %}'">Back</button>
-                            <button class="btn btn-primary" data-toggle="modal" data-target="#changePasswordModal">Change Password</button>
+                        <div>
+                            <h4>Personal Information</h4>
+                            <p>Manage your personal details and how we can reach you</p>
                         </div>
+                    </div>
+                    <div class="account-card-body">
+                        <ul class="account-info-list">
+                            <li class="account-info-item">
+                                <div class="account-info-label">
+                                    <span class="label-text">Username</span>
+                                    <span class="label-value" id="username-display">{{ user.username }}</span>
+                                </div>
+                                <button class="account-edit-btn" data-toggle="modal" data-target="#editUsernameModal">
+                                    <i class="fas fa-pen"></i> Edit
+                                </button>
+                            </li>
+                            <li class="account-info-item">
+                                <div class="account-info-label">
+                                    <span class="label-text">First Name</span>
+                                    <span class="label-value" id="first-name-display">{{ user.first_name|default:"Not provided" }}</span>
+                                </div>
+                                <button class="account-edit-btn" data-toggle="modal" data-target="#editFirstNameModal">
+                                    <i class="fas fa-pen"></i> Edit
+                                </button>
+                            </li>
+                            <li class="account-info-item">
+                                <div class="account-info-label">
+                                    <span class="label-text">Last Name</span>
+                                    <span class="label-value" id="last-name-display">{{ user.last_name|default:"Not provided" }}</span>
+                                </div>
+                                <button class="account-edit-btn" data-toggle="modal" data-target="#editLastNameModal">
+                                    <i class="fas fa-pen"></i> Edit
+                                </button>
+                            </li>
+                            <li class="account-info-item highlight-row">
+                                <div class="account-info-label">
+                                    <span class="label-text">Email Address</span>
+                                    <span class="label-value">{{ user.email }}</span>
+                                </div>
+                                <span class="account-badge badge-success">
+                                    <i class="fas fa-check-circle"></i> Verified
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="account-card-footer">
+                        <a href="{% url 'home' %}" class="account-btn account-btn-outline">
+                            <i class="fas fa-arrow-left"></i> Back to Home
+                        </a>
+                        <button class="account-btn account-btn-primary" data-toggle="modal" data-target="#changePasswordModal">
+                            <i class="fas fa-lock"></i> Change Password
+                        </button>
                     </div>
                 </div>
             </div>
-            <!-- Wallet section -->
-            <div class="col-md-4">
-                <div class="card wallet-card">
-                    <div class="card-body">
-                        <h2>Your Wallet</h2>
-                        <div class="wallet-info">
-                            <!-- Add wallet information here -->
-                            <!-- For example: -->
-                            <p><strong>Balance:</strong> ${{ wallet.balance }}</p>
-                            <div class="divider"></div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4 mb-4">
+                <!-- Wallet Summary Card -->
+                <div class="account-wallet-card">
+                    <div class="wallet-bg-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="wallet-label">AVAILABLE BALANCE</div>
+                    <div class="wallet-amount">₹{{ wallet.balance|default:"0.00" }}</div>
+                    <div class="wallet-subtitle">Ready for your next purchase</div>
+                    <a href="{% url 'wallet' %}" class="wallet-action-btn">
+                        View Wallet History <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <!-- Quick Help Card -->
+                <div class="account-card mt-4">
+                    <div class="account-card-body text-center" style="padding: 30px;">
+                        <div class="help-icon">
+                            <i class="fas fa-headset"></i>
                         </div>
+                        <h5 style="font-weight: 700; margin-bottom: 8px;">Need Help?</h5>
+                        <p style="color: #6c757d; font-size: 0.9rem; margin-bottom: 20px;">
+                            Having issues with your account? Our support team is here to help.
+                        </p>
+                        <a href="{% url 'customer_service' %}" class="account-btn account-btn-outline" style="width: 100%; justify-content: center;">
+                            <i class="fas fa-envelope"></i> Contact Support
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    
+</div>
 
 
 <!-- Edit Username Modal -->
 <div class="modal fade" id="editUsernameModal" tabindex="-1" role="dialog" aria-labelledby="editUsernameModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content account-modal">
             <div class="modal-header">
-                <h5 class="modal-title" id="editUsernameModalLabel">Edit Username</h5>
+                <h5 class="modal-title" id="editUsernameModalLabel"><i class="fas fa-user-edit mr-2"></i> Edit Username</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -108,11 +172,13 @@
                 <form id="editUsernameForm" method="POST" action="{% url 'edit_username' %}">
                     {% csrf_token %}
                     <div class="form-group">
-                        <label for="new-username">New Username:</label>
-                        <input type="text" class="form-control" id="new-username" name="new_username" placeholder="Enter new username">
+                        <label for="new-username" class="account-form-label">New Username</label>
+                        <input type="text" class="form-control account-form-input" id="new-username" name="new_username" placeholder="Enter new username">
                     </div>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <div class="modal-btn-group">
+                        <button type="button" class="account-btn account-btn-outline" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="account-btn account-btn-primary">Save Changes</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -120,13 +186,12 @@
 </div>
 
 
-
 <!-- Edit First Name Modal -->
 <div class="modal fade" id="editFirstNameModal" tabindex="-1" role="dialog" aria-labelledby="editFirstNameModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content account-modal">
             <div class="modal-header">
-                <h5 class="modal-title" id="editFirstNameModalLabel">Edit First Name</h5>
+                <h5 class="modal-title" id="editFirstNameModalLabel"><i class="fas fa-user-edit mr-2"></i> Edit First Name</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -135,11 +200,13 @@
                 <form id="editFirstNameForm" method="POST" action="{% url 'edit_first_name' %}">
                     {% csrf_token %}
                     <div class="form-group">
-                        <label for="new-first-name">New First Name:</label>
-                        <input type="text" class="form-control" id="new-first-name" name="new_first_name" placeholder="Enter new first name">
+                        <label for="new-first-name" class="account-form-label">New First Name</label>
+                        <input type="text" class="form-control account-form-input" id="new-first-name" name="new_first_name" placeholder="Enter new first name">
                     </div>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <div class="modal-btn-group">
+                        <button type="button" class="account-btn account-btn-outline" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="account-btn account-btn-primary">Save Changes</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -148,10 +215,10 @@
 
 <!-- Edit Last Name Modal -->
 <div class="modal fade" id="editLastNameModal" tabindex="-1" role="dialog" aria-labelledby="editLastNameModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content account-modal">
             <div class="modal-header">
-                <h5 class="modal-title" id="editLastNameModalLabel">Edit Last Name</h5>
+                <h5 class="modal-title" id="editLastNameModalLabel"><i class="fas fa-user-edit mr-2"></i> Edit Last Name</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -160,11 +227,13 @@
                 <form id="editLastNameForm" method="POST" action="{% url 'edit_last_name' %}">
                     {% csrf_token %}
                     <div class="form-group">
-                        <label for="new-last-name">New Last Name:</label>
-                        <input type="text" class="form-control" id="new-last-name" name="new_last_name" placeholder="Enter new last name">
+                        <label for="new-last-name" class="account-form-label">New Last Name</label>
+                        <input type="text" class="form-control account-form-input" id="new-last-name" name="new_last_name" placeholder="Enter new last name">
                     </div>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <div class="modal-btn-group">
+                        <button type="button" class="account-btn account-btn-outline" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="account-btn account-btn-primary">Save Changes</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -172,13 +241,12 @@
 </div>
 
 
-
 <!-- Change Password Modal -->
 <div class="modal fade" id="changePasswordModal" tabindex="-1" role="dialog" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content account-modal">
             <div class="modal-header">
-                <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+                <h5 class="modal-title" id="changePasswordModalLabel"><i class="fas fa-shield-alt mr-2"></i> Change Password</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -186,19 +254,21 @@
             <div class="modal-body">
                 <form id="changePasswordForm">
                     <div class="form-group">
-                        <label for="current_password">Current Password:</label>
-                        <input type="password" class="form-control" id="current_password" required>
+                        <label for="current_password" class="account-form-label">Current Password</label>
+                        <input type="password" class="form-control account-form-input" id="current_password" required placeholder="Enter current password">
                     </div>
                     <div class="form-group">
-                        <label for="new_password">New Password:</label>
-                        <input type="password" class="form-control" id="new_password" required>
+                        <label for="new_password" class="account-form-label">New Password</label>
+                        <input type="password" class="form-control account-form-input" id="new_password" required placeholder="Enter new password">
                     </div>
                     <div class="form-group">
-                        <label for="confirm_new_password">Confirm New Password:</label>
-                        <input type="password" class="form-control" id="confirm_new_password" required>
+                        <label for="confirm_new_password" class="account-form-label">Confirm New Password</label>
+                        <input type="password" class="form-control account-form-input" id="confirm_new_password" required placeholder="Re-enter new password">
                     </div>
-                    <button type="submit" class="btn btn-primary">Change Password</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <div class="modal-btn-group">
+                        <button type="button" class="account-btn account-btn-outline" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="account-btn account-btn-primary">Update Password</button>
+                    </div>
                 </form>
             </div>
         </div>

@@ -1,100 +1,63 @@
 {% extends 'admin_base.html' %}
 {% load static %}
 {% block content %}
-<!-- Toggle button for sidebar -->
-
-<div class="d-flex">
-    <div class="sidebar bg-black" id="sidebar">
-        <div class="list-group">
-            <a href="{% url 'admin_dashboard' %}" class="list-group-item list-group-item-action">
-                <img src="{% static 'assets/images/icons8-dashboard-layout-32.png' %}" alt="Dashboard Logo" class="logo"> <span class="sidebar-text">Dashboard</span>
-            </a>
-            <a href="{% url 'admin_users' %}" class="list-group-item list-group-item-action">
-                <img src="{% static 'assets/images/icons8-users-32.png' %}" alt="Users Logo" class="logo"> <span class="sidebar-text">Users</span>
-            </a>
-            <a href="{% url 'admin_categories' %}" class="list-group-item list-group-item-action ">
-                <img src="{% static 'assets/images/icons8-categorize-32.png' %}" alt="Categories Logo" class="logo"> <span class="sidebar-text">Categories</span>
-            </a>
-            <a href="{% url 'admin_product' %}" class="list-group-item list-group-item-action">
-                <img src="{% static 'assets/images/icons8-products-32.png' %}" alt="Products Logo" class="logo"> <span class="sidebar-text">Products</span>
-            </a>
-            <a href="{% url 'admin_orders' %}" class="list-group-item list-group-item-action">
-                <img src="{% static 'assets/images/icons8-logistics-32.png' %}" alt="Orders Logo" class="logo"> <span class="sidebar-text">Orders</span>
-            </a>
-            <a href="{% url 'admin_coupons' %}" class="list-group-item list-group-item-action active">
-                <img src="{% static 'assets/images/icons8-coupon-32.png' %}" alt="Coupons Logo" class="logo"> <span class="sidebar-text">Coupons</span>
-            </a>
-            <a href="{% url 'admin_offers' %}" class="list-group-item list-group-item-action ">
-                <img src="{% static 'assets/images/icons8-sale-32.png' %}" alt="Coupons Logo" class="logo"> <span class="sidebar-text">Offers</span>
-            </a>
-            <a href="{% url 'review_cancellation_requests' %}" class="list-group-item list-group-item-action ">
-                <img src="{% static 'assets/images/icons8-sale-32.png' %}" alt="Coupons Logo" class="logo"> <span class="sidebar-text">Cancellation request</span>
-            </a>
-        </div>
-        <div class="mt-auto text-center">
-            <button class="btn btn-primary mb-3" id="sidebarToggle"><img src="{% static 'assets/images/icons8-repeat-48.png' %}" alt="Coupons Logo" class="logo"></button>
-        </div>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h4 mb-0">Coupon Management</h2>
+    <a href="{% url 'add_coupon' %}" class="btn btn-primary btn-sm shadow-sm">
+        <i class="fas fa-plus mr-1"></i> Add Coupon
+    </a>
 </div>
 
-
-
-
-<div class="main-content">
-    <div class="content p-4">
-                    <a href="{% url 'add_coupon' %}" class="btn btn-primary mb-3">Add Coupon</a>
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="mb-0">Coupon Management</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-striped text-center">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Code</th>
-                                            <th>Discount ($)</th>
-                                            <th>Valid From</th>
-                                            <th>Valid To</th>
-                                            <th>minimum_required</th>
-                                            <th>Is Active</th>
-                                            <th>Edit</th>
-                                            <th>Delete</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody text-middle>
-                                        {% for coupon in coupons %}
-                                        <tr>
-                                            <td>{{ coupon.id }}</td>
-                                            <td>{{ coupon.code }}</td>
-                                            <td>{{ coupon.discount_amount }}</td>
-                                            <td>{{ coupon.valid_from }}</td>
-                                            <td>{{ coupon.valid_to }}</td>
-                                            <td>{{ coupon.minimum_required}}</td>
-                                            <td>{{ coupon.is_active }}</td>
-                                            <td>
-                                                <a href="{% url 'edit_coupon' coupon.id %}" class="btn btn-primary btn-sm">Edit</a>
-                                            </td>
-                                            <td>
-                                                <form action="{% url 'delete_coupon' coupon.id %}" method="post">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
+<div class="card shadow-sm mb-4">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover text-center mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Code</th>
+                        <th>Discount (₹)</th>
+                        <th>Min Required</th>
+                        <th>Valid From</th>
+                        <th>Valid To</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for coupon in coupons %}
+                    <tr>
+                        <td>{{ coupon.id }}</td>
+                        <td><code class="font-weight-bold">{{ coupon.code }}</code></td>
+                        <td>₹{{ coupon.discount_amount }}</td>
+                        <td>₹{{ coupon.minimum_required }}</td>
+                        <td>{{ coupon.valid_from|date:"M d, Y" }}</td>
+                        <td>{{ coupon.valid_to|date:"M d, Y" }}</td>
+                        <td>
+                            {% if coupon.is_active %}
+                                <span class="badge badge-success px-2 py-1">Active</span>
+                            {% else %}
+                                <span class="badge badge-secondary px-2 py-1">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'edit_coupon' coupon.id %}" class="btn btn-outline-primary btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form action="{% url 'delete_coupon' coupon.id %}" method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm ml-1" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
-
-
-
 {% endblock %}

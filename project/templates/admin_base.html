@@ -4,151 +4,355 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin</title>
+    <title>{% block title %}Admin Dashboard{% endblock %} | Fruitkha</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 4 -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="http://cdn.bokeh.org/bokeh/release/bokeh-0.9.0.min.js"></script>
-    <link rel="stylesheet" href="http://cdn.bokeh.org/bokeh/release/bokeh-0.9.0.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"></script>
-
+    <!-- Cropper.js -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-</head>
-<body style="background-color: #e9ecef;">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-        <a class="navbar-brand" href="#">Admin</a>
-        <ul class="navbar-nav ml-auto">
-            <li class="nav-item">
-                <span class="navbar-text text-white">Hello, {{request.user.username}}</span>
-            </li>
-            <li class="nav-item">
-                <form action="{% url 'logout_admin' %}" method="post">
-                    {% csrf_token %}
-                    <button type='submit' class="nav-link btn">Logout</button>
-                </form>
-            </li>
-        </ul>
-    </nav>
-    
-    {% block content %}
-    {% endblock %}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <style>
-        /* styles.css */
-        .sidebar {
-            width: 250px;
-            transition: width 0.3s;
-        }
-    
-        .sidebar.collapsed {
-            width: 80px;
-        }
-    
-        .sidebar .list-group-item {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-    
-        .main-content {
-            transition: margin-left 0.3s;
-            margin-left: 250px;
-        }
-    
-        .main-content.collapsed {
-            margin-left: 80px;
-        }
-    
-        .collapsed .sidebar-text {
-            display: none;
-        }
-    
-        /* CSS */
-    #sidebarToggle {
-        background-size: contain; /* Adjust as needed */
-    }
-    
-    .sidebar img.logo {
-        width: 24px;
-        height: 24px;
-        margin-right: px;
-    }
-    </style>
 
-    
     <style>
-        /* Custom CSS for adjusting sidebar position */
+        :root {
+            --sidebar-width: 260px;
+            --sidebar-collapsed-width: 70px;
+            --sidebar-bg: #1a1c1e;
+            --sidebar-hover: #2c2e31;
+            --accent-color: #f28123;
+            --accent-hover: #d96f1a;
+            --text-muted-sidebar: #9fa6ad;
+            --navbar-height: 60px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar-custom {
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            z-index: 1040;
+            height: var(--navbar-height);
+            padding: 0 1.25rem;
+        }
+
+        .navbar-brand-custom {
+            font-weight: 700;
+            color: var(--accent-color) !important;
+            font-size: 1.4rem;
+            letter-spacing: -0.5px;
+            text-decoration: none;
+        }
+
+        .navbar-brand-custom:hover { color: var(--accent-hover) !important; text-decoration: none; }
+
+        #sidebarToggle {
+            cursor: pointer;
+            color: #555;
+            font-size: 1.2rem;
+            padding: 6px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        #sidebarToggle:hover { color: var(--accent-color); background: rgba(242,129,35,0.08); }
+
+        /* ===== SIDEBAR ===== */
         .sidebar {
             position: fixed;
-            top: 0;
+            top: var(--navbar-height);
             left: 0;
-            height: 100vh; /* Full height */
-            width: 250px; /* Adjust as needed */
-            background-color: #343a40; /* Bootstrap dark color */
-            padding-top: 56px; /* Height of the navbar */
-            overflow-y: auto; /* Enable scrolling if content exceeds height */
+            height: calc(100vh - var(--navbar-height));
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            z-index: 1030;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 15px rgba(0,0,0,0.08);
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
-        .main-content {
-            margin-left: 250px; /* Same as sidebar width */
-            padding-top: 56px; /* Height of the navbar */
-        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
 
-        .image-container {
-            width: 90px; /* Set the desired width */
-            height: 60px; /* Set the desired height */
-            border: 1px solid #ccc; /* Add border */
+        .sidebar .nav-menu { padding: 1rem 0.75rem; }
+
+        .sidebar .nav-link {
             display: flex;
-            justify-content: center;
             align-items: center;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.25rem;
+            color: var(--text-muted-sidebar);
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .sidebar .nav-link i {
+            font-size: 1.1rem;
+            width: 22px;
+            min-width: 22px;
+            text-align: center;
+            margin-right: 14px;
+            transition: margin 0.3s;
+        }
+
+        .sidebar .nav-link:hover {
+            background: var(--sidebar-hover);
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .sidebar .nav-link.active {
+            background: linear-gradient(135deg, var(--accent-color), #fbaf32);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(242, 129, 35, 0.3);
+        }
+
+        .sidebar .nav-link .link-text {
+            opacity: 1;
+            transition: opacity 0.2s;
             overflow: hidden;
         }
-        
-        .product-image {
-            max-width: 100%; /* Ensure image fits container */
-            height: auto; /* Maintain aspect ratio */
+
+        /* Collapsed sidebar on desktop */
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
         }
 
-        /* Custom CSS for navbar */
-        .navbar {
-            background-color: #343a40; /* Bootstrap dark color */
-            color: white; /* Text color */
+        .sidebar.collapsed .nav-link i { margin-right: 0; }
+        .sidebar.collapsed .link-text { opacity: 0; width: 0; display: none; }
+        .sidebar.collapsed .nav-link { justify-content: center; padding: 0.75rem 0; }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding-top: calc(var(--navbar-height) + 1.5rem);
+            padding-bottom: 2rem;
+            min-height: 100vh;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .navbar-brand {
-            color: white !important; /* Override default bootstrap color */
+        .main-content.collapsed {
+            margin-left: var(--sidebar-collapsed-width);
         }
 
-        .navbar-nav .nav-link {
-            color: white !important; /* Override default bootstrap color */
+        /* ===== MOBILE OVERLAY ===== */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: var(--navbar-height);
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1025;
         }
-        
-        .navbar-nav {
-            flex-direction: row; /* Align items horizontally */
+
+        .sidebar-overlay.show { display: block; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-width);
+                z-index: 1035;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            /* On mobile, never use collapsed styling */
+            .sidebar.collapsed { width: var(--sidebar-width); }
+            .sidebar.collapsed .link-text { opacity: 1; width: auto; display: inline; }
+            .sidebar.collapsed .nav-link i { margin-right: 14px; }
+            .sidebar.collapsed .nav-link { justify-content: flex-start; padding: 0.75rem 1rem; }
+
+            .main-content,
+            .main-content.collapsed {
+                margin-left: 0 !important;
+                padding-top: calc(var(--navbar-height) + 1rem);
+            }
+
+            .container-fluid { padding: 0 0.75rem !important; }
         }
-        
-        .navbar-text {
-            margin-right: 15px; /* Adjust spacing */
+
+        /* ===== CARDS & TABLES ===== */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         }
+
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 1rem 1.25rem;
+            font-weight: 600;
+        }
+
+        .table th {
+            border-top: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+        }
+
+        .table td { vertical-align: middle; }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+
+        /* ===== PRINT ===== */
+        @media print {
+            .sidebar, .navbar-custom, .sidebar-overlay, #sidebarToggle { display: none !important; }
+            .main-content, .main-content.collapsed { margin-left: 0 !important; padding-top: 0 !important; }
+        }
+
+        {% block extra_css %}{% endblock %}
     </style>
-    
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom fixed-top d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <div id="sidebarToggle" class="mr-3">
+                <i class="fas fa-bars"></i>
+            </div>
+            <a class="navbar-brand-custom" href="{% url 'admin_dashboard' %}">🍊 Fruitkha</a>
+        </div>
+        <div class="d-flex align-items-center">
+            <span class="text-muted d-none d-sm-inline mr-3" style="font-size:0.85rem;">
+                <i class="far fa-user-circle mr-1"></i> <strong>{{ request.user.username }}</strong>
+            </span>
+            <form action="{% url 'logout_admin' %}" method="post" class="m-0">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3" style="font-size:0.8rem;">
+                    <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="nav-menu">
+            <a href="{% url 'admin_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+                <i class="fas fa-chart-line"></i> <span class="link-text">Dashboard</span>
+            </a>
+            <a href="{% url 'admin_users' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_users' %}active{% endif %}">
+                <i class="fas fa-users"></i> <span class="link-text">Customers</span>
+            </a>
+            <a href="{% url 'admin_categories' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_categories' or request.resolver_match.url_name == 'add_category' or request.resolver_match.url_name == 'edit_category' %}active{% endif %}">
+                <i class="fas fa-tags"></i> <span class="link-text">Categories</span>
+            </a>
+            <a href="{% url 'admin_product' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_product' or request.resolver_match.url_name == 'add_product' or request.resolver_match.url_name == 'edit_product' %}active{% endif %}">
+                <i class="fas fa-boxes"></i> <span class="link-text">Products</span>
+            </a>
+            <a href="{% url 'admin_orders' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_orders' or request.resolver_match.url_name == 'admin_order_items' %}active{% endif %}">
+                <i class="fas fa-shopping-cart"></i> <span class="link-text">Orders</span>
+            </a>
+            <a href="{% url 'admin_coupons' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_coupons' or request.resolver_match.url_name == 'add_coupon' or request.resolver_match.url_name == 'edit_coupon' %}active{% endif %}">
+                <i class="fas fa-ticket-alt"></i> <span class="link-text">Coupons</span>
+            </a>
+            <a href="{% url 'admin_offers' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_offers' or request.resolver_match.url_name == 'add_offer' or request.resolver_match.url_name == 'edit_offer' %}active{% endif %}">
+                <i class="fas fa-percentage"></i> <span class="link-text">Offers</span>
+            </a>
+            <a href="{% url 'review_cancellation_requests' %}" class="nav-link {% if request.resolver_match.url_name == 'review_cancellation_requests' %}active{% endif %}">
+                <i class="fas fa-undo"></i> <span class="link-text">Cancellations</span>
+            </a>
+            <a href="{% url 'report' %}" class="nav-link {% if request.resolver_match.url_name == 'report' %}active{% endif %}">
+                <i class="fas fa-file-invoice-dollar"></i> <span class="link-text">Sales Report</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content" id="mainContent">
+        <div class="container-fluid px-4">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
     <script>
-        document.getElementById('sidebarToggle').addEventListener('click', function() {
-            var sidebar = document.getElementById('sidebar');
-            var mainContent = document.querySelector('.main-content');
-            var sidebarTexts = document.querySelectorAll('.sidebar-text');
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('collapsed');
-            sidebarTexts.forEach(function(text) {
-                text.classList.toggle('hide');
+        $(document).ready(function() {
+            var isMobile = $(window).width() < 769;
+
+            // On desktop, start with sidebar open. On mobile, start closed.
+            if (!isMobile) {
+                // Restore collapsed state from localStorage
+                if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                    $('#sidebar').addClass('collapsed');
+                    $('#mainContent').addClass('collapsed');
+                }
+            }
+
+            $('#sidebarToggle').on('click', function() {
+                if (isMobile) {
+                    // Mobile: slide sidebar in/out
+                    $('#sidebar').toggleClass('mobile-open');
+                    $('#sidebarOverlay').toggleClass('show');
+                } else {
+                    // Desktop: collapse/expand
+                    $('#sidebar').toggleClass('collapsed');
+                    $('#mainContent').toggleClass('collapsed');
+                    localStorage.setItem('sidebarCollapsed', $('#sidebar').hasClass('collapsed'));
+                }
+            });
+
+            // Close sidebar when clicking overlay on mobile
+            $('#sidebarOverlay').on('click', function() {
+                $('#sidebar').removeClass('mobile-open');
+                $(this).removeClass('show');
+            });
+
+            // Handle resize
+            $(window).resize(function() {
+                isMobile = $(window).width() < 769;
+                if (!isMobile) {
+                    $('#sidebar').removeClass('mobile-open');
+                    $('#sidebarOverlay').removeClass('show');
+                }
             });
         });
     </script>
+
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

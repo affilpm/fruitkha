@@ -17,7 +17,7 @@ from cart.forms import CartUpdateForm
 from django.core.mail import send_mail
 from django.conf import settings
 import re
-from .utils import send_sms
+from .utils import send_otp_email
 from django.db.models import Sum, Count
 from django.core.exceptions import PermissionDenied
 from orders.models import Coupon, Wallet, Transaction, CancellationRequest, Order, OrderItem
@@ -320,11 +320,10 @@ def user_register(request):
             request.session['otp_timestamp'] = time.time()
             request.session['user_data'] = form.cleaned_data
 
-            phone_number = form.cleaned_data['phone']
-            message = f'Your OTP is: {otp}'
-            success, response = send_sms(phone_number, message)
+            email = form.cleaned_data['email']
+            success, response = send_otp_email(email, otp)
             if not success:
-                messages.error(request, f'Failed to send OTP: {response}')
+                messages.error(request, f'Failed to send OTP email: {response}')
                 return redirect('user_register')
 
             return redirect('otp')
@@ -354,7 +353,6 @@ def otp(request):
                     if form.is_valid():
                         user = form.save(commit=False)
                         user.email = form.cleaned_data['email']
-                        user.phone = form.cleaned_data['phone']
                         user.save()
 
                         del request.session['otp']
@@ -374,13 +372,12 @@ def otp(request):
 def resend_otp(request):
     if 'user_data' in request.session:
         user_data = request.session['user_data']
-        phone_number = user_data.get('phone')
-        if phone_number:
+        email = user_data.get('email')
+        if email:
             otp = random.randint(100000, 999999)
             request.session['otp'] = otp
             request.session['otp_timestamp'] = time.time()
-            message = f'Your new OTP is: {otp}'
-            success, response = send_sms(phone_number, message)
+            success, response = send_otp_email(email, otp)
             if success:
                 return JsonResponse({'success': True, 'remaining_time': OTP_EXPIRATION_TIME})
             else:
@@ -402,11 +399,12 @@ def user_login(request):
         return redirect('home')  
 
     if request.method == "POST":
-        form = AuthenticationForm(request, request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(request, username=username, password=password)
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        
+        user_obj = CustomUser.objects.filter(email=email).first()
+        if user_obj:
+            user = authenticate(request, username=user_obj.username, password=password)
             if user is not None:
                 if user.is_active and not user.is_superuser:
                     login(request, user)
@@ -415,15 +413,105 @@ def user_login(request):
                     messages.error(request, "Admin login is not allowed from this page.")
                 else:
                     messages.error(request, "Your account is blocked. Please contact support for assistance.")
-                    return render(request, 'user_login.html', {'form': form, 'blocked': True})
+                    return render(request, 'user_login.html', {'blocked': True})
+            else:
+                messages.error(request, "Invalid email or password.")
         else:
-            messages.error(request, "Invalid username or password or Your account is inactive.")
-    else:
-        form = AuthenticationForm()
+            messages.error(request, "Invalid email or password.")
     
-    return render(request, 'user_login.html', {'form': form, 'blocked': False})
+    return render(request, 'user_login.html', {'blocked': False})
 
 
+
+@never_cache
+def forgot_password(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        user = CustomUser.objects.filter(email=email).first()
+        if user:
+            otp = random.randint(100000, 999999)
+            request.session['fp_otp'] = otp
+            request.session['fp_otp_timestamp'] = time.time()
+            request.session['fp_email'] = email
+            
+            success, response = send_otp_email(email, otp)
+            if not success:
+                messages.error(request, f'Failed to send OTP email: {response}')
+                return redirect('forgot_password')
+            
+            return redirect('forgot_password_otp')
+        else:
+            messages.error(request, 'No user found with this email address.')
+    return render(request, 'forgot_password.html')
+
+@never_cache
+def forgot_password_otp(request):
+    if 'fp_otp' in request.session and 'fp_otp_timestamp' in request.session:
+        current_time = time.time()
+        otp_creation_time = request.session['fp_otp_timestamp']
+        remaining_time = OTP_EXPIRATION_TIME - (current_time - otp_creation_time)
+        if remaining_time <= 0:
+            del request.session['fp_otp']
+            del request.session['fp_otp_timestamp']
+            messages.error(request, 'Your OTP has expired. Please try again.')
+            return render(request, 'forgot_password_otp.html', {'remaining_time': 0})
+        
+        if request.method == 'POST':
+            otp_entered = request.POST.get('otp')
+            if otp_entered == str(request.session['fp_otp']):
+                request.session['fp_verified'] = True
+                del request.session['fp_otp']
+                del request.session['fp_otp_timestamp']
+                return redirect('reset_password')
+            else:
+                messages.error(request, 'Invalid OTP. Please try again.')
+        return render(request, 'forgot_password_otp.html', {'remaining_time': int(remaining_time)})
+    else:
+        return redirect('forgot_password')
+
+@never_cache
+def resend_fp_otp(request):
+    if 'fp_email' in request.session:
+        email = request.session['fp_email']
+        otp = random.randint(100000, 999999)
+        request.session['fp_otp'] = otp
+        request.session['fp_otp_timestamp'] = time.time()
+        success, response = send_otp_email(email, otp)
+        if success:
+            return JsonResponse({'success': True, 'remaining_time': OTP_EXPIRATION_TIME})
+        else:
+            return JsonResponse({'success': False, 'message': response})
+    return JsonResponse({'success': False, 'message': 'Session expired.'})
+
+@never_cache
+def reset_password(request):
+    if not request.session.get('fp_verified'):
+        return redirect('forgot_password')
+        
+    if request.method == 'POST':
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        if password != confirm_password:
+            messages.error(request, 'Passwords do not match.')
+        elif not is_strong_password(password):
+            messages.error(request, 'Password must be at least 8 characters long, contain an uppercase letter, lowercase letter, a digit, and a special character.')
+        else:
+            email = request.session.get('fp_email')
+            user = CustomUser.objects.filter(email=email).first()
+            if user:
+                user.set_password(password)
+                user.save()
+                
+                del request.session['fp_verified']
+                del request.session['fp_email']
+                
+                messages.success(request, 'Password reset successfully. You can now login.')
+                return redirect('user_login')
+            else:
+                messages.error(request, 'An error occurred. User not found.')
+                
+    return render(request, 'reset_password.html')
 
 @staff_member_required(login_url='admin_login')
 @never_cache

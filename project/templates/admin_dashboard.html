@@ -1,119 +1,78 @@
 {% extends 'admin_base.html' %}
 {% load static %}
 {% block content %}
+<!-- Sales Report Filter Form -->
+<form method="get" action="" class="mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-3">
+            <label for="interval" class="form-label">Interval:</label>
+        </div>
+        <div class="col-md-3">
+            <select name="interval" id="report_interval" class="form-select">
+                <option value="day" {% if interval == 'Day' %}selected{% endif %}>Day</option>
+                <option value="week" {% if interval == 'Week' %}selected{% endif %}>Week</option>
+                <option value="month" {% if interval == 'Month' %}selected{% endif %}>Month</option>
+                <option value="year" {% if interval == 'Year' %}selected{% endif %}>Year</option>
+            </select>
+        </div>
+        <div class="col-md-auto">
+            <button type="submit" class="btn btn-primary">Apply Filter</button>
+        </div>
+        <div class="col-md-auto">
+            <a href="{% url 'report' %}" class="btn btn-success">View Sales Report</a>
+        </div>
+    </div>
+</form>
 
-<!-- Sidebar -->
-<div class="d-flex">
-    <div class="sidebar bg-black" id="sidebar">
-        <div class="list-group">
-            <a href="{% url 'admin_dashboard' %}" class="list-group-item list-group-item-action active">
-                <img src="{% static 'assets/images/icons8-dashboard-layout-32.png' %}" alt="Dashboard Logo" class="logo"> <span class="sidebar-text">Dashboard</span>
-            </a>
-            <a href="{% url 'admin_users' %}" class="list-group-item list-group-item-action">
-                <img src="{% static 'assets/images/icons8-users-32.png' %}" alt="Users Logo" class="logo"> <span class="sidebar-text">Users</span>
-            </a>
-            <a href="{% url 'admin_categories' %}" class="list-group-item list-group-item-action ">
-                <img src="{% static 'assets/images/icons8-categorize-32.png' %}" alt="Categories Logo" class="logo"> <span class="sidebar-text">Categories</span>
-            </a>
-            <a href="{% url 'admin_product' %}" class="list-group-item list-group-item-action">
-                <img src="{% static 'assets/images/icons8-products-32.png' %}" alt="Products Logo" class="logo"> <span class="sidebar-text">Products</span>
-            </a>
-            <a href="{% url 'admin_orders' %}" class="list-group-item list-group-item-action">
-                <img src="{% static 'assets/images/icons8-logistics-32.png' %}" alt="Orders Logo" class="logo"> <span class="sidebar-text">Orders</span>
-            </a>
-            <a href="{% url 'admin_coupons' %}" class="list-group-item list-group-item-action ">
-                <img src="{% static 'assets/images/icons8-coupon-32.png' %}" alt="Coupons Logo" class="logo"> <span class="sidebar-text">Coupons</span>
-            </a>
-            <a href="{% url 'admin_offers' %}" class="list-group-item list-group-item-action ">
-                <img src="{% static 'assets/images/icons8-sale-32.png' %}" alt="Coupons Logo" class="logo"> <span class="sidebar-text">Offers</span>
-            </a>
-            <a href="{% url 'review_cancellation_requests' %}" class="list-group-item list-group-item-action ">
-                <img src="{% static 'assets/images/icons8-sale-32.png' %}" alt="Coupons Logo" class="logo"> <span class="sidebar-text">Cancellation request</span>
-            </a>
-        </div>
-        <div class="mt-auto text-center">
-            <button class="btn btn-primary mb-3" id="sidebarToggle"><img src="{% static 'assets/images/icons8-repeat-48.png' %}" alt="Coupons Logo" class="logo"></button>
-        </div>
+<!-- Chart Container -->
+<div class="chart-container">
+    <canvas id="myPieChart" class="w-100"></canvas>
+</div>
+
+<!-- Top Selling Products -->
+<div class="top-selling-section mt-5">
+    <h2 class="mb-4">Top Selling Products</h2>
+    <div class="row">
+        {% if top_selling_products %}
+            {% for product in top_selling_products %}
+                <div class="col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">{{ product.product__name }}</h5>
+                            <p class="card-text">Sold: {{ product.product_count }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col">
+                <p class="text-muted">No data available</p>
+            </div>
+        {% endif %}
     </div>
 </div>
 
-<div class="main-content">
-    <div class="content p-4">
-        <!-- Sales Report Filter Form -->
-        <form method="get" action="" class="mb-4">
-            <div class="row align-items-center">
-                <div class="col-md-3">
-                    <label for="interval" class="form-label">Interval:</label>
-                </div>
-                <div class="col-md-3">
-                    <select name="interval" id="report_interval" class="form-select">
-                        <option value="day" {% if interval == 'Day' %}selected{% endif %}>Day</option>
-                        <option value="week" {% if interval == 'Week' %}selected{% endif %}>Week</option>
-                        <option value="month" {% if interval == 'Month' %}selected{% endif %}>Month</option>
-                        <option value="year" {% if interval == 'Year' %}selected{% endif %}>Year</option>
-                    </select>
-                </div>
-                <div class="col-md-auto">
-                    <button type="submit" class="btn btn-primary">Apply Filter</button>
-                </div>
-                <div class="col-md-auto">
-                    <a href="{% url 'report' %}" class="btn btn-success">View Sales Report</a>
-                </div>
-            </div>
-        </form>
-
-        <!-- Chart Container -->
-        <div class="chart-container">
-            <canvas id="myPieChart" class="w-100"></canvas>
-        </div>
-
-        <!-- Top Selling Products -->
-        <div class="top-selling-section mt-5">
-            <h2 class="mb-4">Top Selling Products</h2>
-            <div class="row">
-                {% if top_selling_products %}
-                    {% for product in top_selling_products %}
-                        <div class="col-lg-4 mb-4">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title mb-3">{{ product.product__name }}</h5>
-                                    <p class="card-text">Sold: {{ product.product_count }}</p>
-                                </div>
-                            </div>
+<!-- Top Selling Categories -->
+<div class="top-selling-section mt-5">
+    <h2 class="mb-4">Top Selling Categories</h2>
+    <div class="row">
+        {% if top_selling_categories %}
+            {% for category in top_selling_categories %}
+                <div class="col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">{{ category.name }}</h5>
+                            <p class="card-text">Sold: {{ category.product_count }}</p>
                         </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="col">
-                        <p class="text-muted">No data available</p>
                     </div>
-                {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col">
+                <p class="text-muted">No data available</p>
             </div>
-        </div>
-
-        <!-- Top Selling Categories -->
-        <div class="top-selling-section mt-5">
-            <h2 class="mb-4">Top Selling Categories</h2>
-            <div class="row">
-                {% if top_selling_categories %}
-                    {% for category in top_selling_categories %}
-                        <div class="col-lg-4 mb-4">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title mb-3">{{ category.name }}</h5>
-                                    <p class="card-text">Sold: {{ category.product_count }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="col">
-                        <p class="text-muted">No data available</p>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
+        {% endif %}
     </div>
-</div>
 </div>
 
 <script>

@@ -1,144 +1,153 @@
 {% extends 'main_base.html' %}
 {% load static %}
-{% load static %}
 
 {% block content %}
     <!-- Breadcrumb section -->
-    <div class="breadcrumb-section breadcrumb-bg" style="margin-bottom: 20px;">
+    <div class="breadcrumb-section breadcrumb-bg" style="margin-bottom: 0;">
         <div class="container">
             <div class="row">
                 <div class="col-lg-8 offset-lg-2 text-center">
                     <div class="breadcrumb-text">
-                        <p>See more Details</p>
-                        <h1>Account</h1>
+                        <p>Manage Your Locations</p>
+                        <h1>Addresses</h1>
                     </div>
                 </div>
             </div>
         </div>
-    </div>  
-
-    <!-- Navigation bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="#">Your Address</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item ">
-                        <a class="nav-link" href="{% url 'user_profile' %}">Profile </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'orders' %}">Orders</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Wallet</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'wishlist' %}">Wishlist</a>
-                    </li>
-                    <li class="nav-item active">
-                        <a class="nav-link" href="#">Addresses<span class="sr-only">(current)</span></a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-        <div class="row">
-            <!-- Add New Address Section -->
-            <div class="col-md-12 mb-4">
-                <div class="card border-primary">
-                    <div class="card-body">
-                        <a href="{% url 'add_address' %}" class="btn btn-primary btn-lg btn-block">Add new address</a>
-    
-                        {% if came_from_checkout %}
-                            <a href="{% url 'checkout' %}" class="btn btn-success btn-lg btn-block">Proceed to Checkout</a>
-                        {% endif %}                
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Heading for Existing Addresses -->
-        <div class="row mt-4">
-            <div class="col-md-12 text-primary">
-                <h2>Existing Addresses</h2>
-            </div>
-        </div>
-
-        <div class="row mt-4" id="searchResults">
-            <!-- Existing Addresses Section -->
-            {% for address in addresses %}
-            <div class="col-md-6 mb-4">
-                <div class="address-box card border-primary">
-                    <div class="card-body">
-                        <h4 class="card-title">{{ address.name }}</h4>
-                        <p class="card-text">{{ address.street }}</p>
-                        <p class="card-text">{{ address.city }}, {{ address.state }}, {{ address.country }}</p>
-                        <p class="card-text">{{ address.postal_code }}</p>
-                        <p class="card-text">{{ address.phone_number }}</p>
-                    </div>
-                    <div class="btn-group" style="position: absolute; top: 10px; right: 10px;" role="group" aria-label="Edit and Delete">
-                        <a href="{% url 'edit_address' address_id=address.id %}" class="btn btn-primary">Edit</a>
-
-
-                        <div class="mx-1"></div> <!-- Adjust the spacing by changing mx-1 -->
-                        <form action="{% url 'delete_address' address.id %}" method="post">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">Delete</button>
-                        </form>
-                    </div>    
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        <!-- Checkout Button Section -->
-     
     </div>
 
+    <!-- Account Navigation Tabs -->
+    <div class="account-nav-section">
+        <div class="container">
+            <ul class="account-nav-tabs">
+                <li class="account-nav-item">
+                    <a href="{% url 'user_profile' %}">
+                        <i class="fas fa-user"></i>
+                        <span>Profile</span>
+                    </a>
+                </li>
+                <li class="account-nav-item">
+                    <a href="{% url 'orders' %}">
+                        <i class="fas fa-box"></i>
+                        <span>Orders</span>
+                    </a>
+                </li>
+                <li class="account-nav-item">
+                    <a href="{% url 'wallet' %}">
+                        <i class="fas fa-wallet"></i>
+                        <span>Wallet</span>
+                    </a>
+                </li>
+                <li class="account-nav-item">
+                    <a href="{% url 'wishlist' %}">
+                        <i class="fas fa-heart"></i>
+                        <span>Wishlist</span>
+                    </a>
+                </li>
+                <li class="account-nav-item active">
+                    <a href="{% url 'address' %}">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Addresses</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
 
+    <!-- Addresses Content -->
+    <div class="account-content-section">
+        <div class="container">
+            <!-- Action Buttons -->
+            <div class="account-card mb-4">
+                <div class="account-card-body" style="padding: 20px;">
+                    <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="account-card-header-icon" style="margin-right: 15px;">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div>
+                                <h4 style="margin: 0; font-weight: 700; font-size: 1.1rem;">Saved Addresses</h4>
+                                <p style="margin: 0; color: #6c757d; font-size: 0.85rem;">Manage your delivery addresses</p>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap" style="gap: 10px;">
+                            <a href="{% url 'add_address' %}" class="account-btn account-btn-primary">
+                                <i class="fas fa-plus"></i> Add New Address
+                            </a>
+                            {% if came_from_checkout %}
+                            <a href="{% url 'checkout' %}" class="account-btn account-btn-success">
+                                <i class="fas fa-check"></i> Proceed to Checkout
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-<style>
-    .address-box {
-        border: 1px solid #ccc;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-</style>
-
-<script>
-    // Validate form fields
-    document.getElementById("addAddressForm").addEventListener("submit", function(event) {
-        var name = document.getElementById("name").value.trim();
-        var street = document.getElementById("street").value.trim();
-        var city = document.getElementById("city").value.trim();
-        var state = document.getElementById("state").value.trim();
-        var country = document.getElementById("country").value.trim();
-        var postal_code = document.getElementById("postal_code").value.trim();
-        var phone_number = document.getElementById("phone_number").value.trim();
-        
-        if (name === "" || street === "" || city === "" || state === "" || country === "" || postal_code === "" || phone_number === "") {
-            event.preventDefault();
-            alert("Please fill out all fields.");
-            return;
-        }
-
-        // Additional validations for postal code and phone number
-        if (!/^\d+$/.test(postal_code) || postal_code.length !== 6) {
-            event.preventDefault();
-            alert("Postal code should contain exactly 6 digits.");
-            return;
-        }
-        if (!/^\d+$/.test(phone_number) || phone_number.length < 8 || phone_number.length > 15) {
-            event.preventDefault();
-            alert("Phone number should contain between 8 and 15 digits.");
-            return;
-        }
-    });
-</script>
+            <!-- Address Cards Grid -->
+            {% if addresses %}
+            <div class="row" id="searchResults">
+                {% for address in addresses %}
+                <div class="col-md-6 mb-4">
+                    <div class="address-card">
+                        <div class="address-card-header">
+                            <div class="address-card-icon">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <h5 class="address-card-name">{{ address.name }}</h5>
+                        </div>
+                        <div class="address-card-body">
+                            <div class="address-detail-row">
+                                <i class="fas fa-road"></i>
+                                <span>{{ address.street }}</span>
+                            </div>
+                            <div class="address-detail-row">
+                                <i class="fas fa-city"></i>
+                                <span>{{ address.city }}, {{ address.state }}, {{ address.country }}</span>
+                            </div>
+                            <div class="address-detail-row">
+                                <i class="fas fa-mail-bulk"></i>
+                                <span>{{ address.postal_code }}</span>
+                            </div>
+                            <div class="address-detail-row">
+                                <i class="fas fa-phone-alt"></i>
+                                <span>{{ address.phone_number }}</span>
+                            </div>
+                        </div>
+                        <div class="address-card-footer">
+                            <a href="{% url 'edit_address' address_id=address.id %}" class="account-btn account-btn-sm account-btn-outline">
+                                <i class="fas fa-pen"></i> Edit
+                            </a>
+                            <form action="{% url 'delete_address' address.id %}" method="post" style="display: inline;"
+                                  onsubmit="return confirm('Are you sure you want to delete this address?');">
+                                {% csrf_token %}
+                                <button type="submit" class="account-btn account-btn-sm account-btn-danger">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- Empty State -->
+            <div class="account-card">
+                <div class="account-card-body text-center" style="padding: 60px 30px;">
+                    <div class="empty-state-icon" style="color: #007bff;">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h4 style="font-weight: 700; margin-bottom: 10px; color: #333;">No Addresses Saved</h4>
+                    <p style="color: #6c757d; max-width: 400px; margin: 0 auto 25px;">
+                        Add your delivery address to make checkout faster and easier.
+                    </p>
+                    <a href="{% url 'add_address' %}" class="account-btn account-btn-primary">
+                        <i class="fas fa-plus"></i> Add Your First Address
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 
 {% endblock %}

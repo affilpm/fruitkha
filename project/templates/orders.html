@@ -4,80 +4,154 @@
 {% block content %}
 
 <!-- Breadcrumb section -->
-<div class="breadcrumb-section breadcrumb-bg" style="margin-bottom: 20px;">
+<div class="breadcrumb-section breadcrumb-bg" style="margin-bottom: 0;">
     <div class="container">
         <div class="row">
             <div class="col-lg-8 offset-lg-2 text-center">
                 <div class="breadcrumb-text">
-                    <p>See more Details</p>
-                    <h1>Account</h1>
+                    <p>Track Your Purchases</p>
+                    <h1>My Orders</h1>
                 </div>
             </div>
         </div>
     </div>
-</div>  
-
-<!-- Navigation bar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container">
-      <a class="navbar-brand" href="#">Your Orders</a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ml-auto">
-          <li class="nav-item active">
-            <a class="nav-link" href="{% url 'user_profile' %}">Profile </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'orders'%}">Orders <span class="sr-only">(current)</span></a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'wallet' %}">Wallet</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'wishlist' %}">Wishlist</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'address' %}">Addresses</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-</nav>
-
-     
-{% if orders %}
-<div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Order #</th>
-                <th>Order Date</th>
-                <th>Total Amount</th>
-                <th>No of products</th>
-                <th>Options</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for order in orders %}
-            <tr>
-                <td>Order - {{ order.pk }}</td>
-                <td>{{ order.order_date }}</td>
-                <td>₹{{ order.total_cost }}</td>
-                <td>{{ order.total_products }}</td>
-                <td>
-                  <a href="{% url 'order_detail' order.id %}" class="btn btn-info">View Details</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
 </div>
-{% else %}
-<p>No orders found.</p>
-{% endif %}
 
-<!-- Your Bootstrap JS and CSS links -->
+<!-- Account Navigation Tabs -->
+<div class="account-nav-section">
+    <div class="container">
+        <ul class="account-nav-tabs">
+            <li class="account-nav-item">
+                <a href="{% url 'user_profile' %}">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </a>
+            </li>
+            <li class="account-nav-item active">
+                <a href="{% url 'orders' %}">
+                    <i class="fas fa-box"></i>
+                    <span>Orders</span>
+                </a>
+            </li>
+            <li class="account-nav-item">
+                <a href="{% url 'wallet' %}">
+                    <i class="fas fa-wallet"></i>
+                    <span>Wallet</span>
+                </a>
+            </li>
+            <li class="account-nav-item">
+                <a href="{% url 'wishlist' %}">
+                    <i class="fas fa-heart"></i>
+                    <span>Wishlist</span>
+                </a>
+            </li>
+            <li class="account-nav-item">
+                <a href="{% url 'address' %}">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Addresses</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- Orders Content -->
+<div class="account-content-section">
+    <div class="container">
+        {% if orders %}
+        <div class="account-card">
+            <div class="account-card-header">
+                <div class="account-card-header-icon">
+                    <i class="fas fa-shopping-bag"></i>
+                </div>
+                <div>
+                    <h4>Order History</h4>
+                    <p>Track and manage all your past orders</p>
+                </div>
+            </div>
+            <div class="account-card-body" style="padding: 0;">
+                <!-- Desktop Table View -->
+                <div class="table-responsive d-none d-md-block">
+                    <table class="account-table">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Date</th>
+                                <th>Total Amount</th>
+                                <th>Products</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td>
+                                    <span class="order-id-badge">#{{ order.pk }}</span>
+                                </td>
+                                <td>
+                                    <span class="order-date">{{ order.order_date }}</span>
+                                </td>
+                                <td>
+                                    <span class="order-amount">₹{{ order.total_cost }}</span>
+                                </td>
+                                <td>
+                                    <span class="order-count-badge">{{ order.total_products }} item{{ order.total_products|pluralize }}</span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'order_detail' order.id %}" class="account-btn account-btn-sm account-btn-primary">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Mobile Card View -->
+                <div class="d-md-none" style="padding: 16px;">
+                    {% for order in orders %}
+                    <div class="order-mobile-card">
+                        <div class="order-mobile-header">
+                            <span class="order-id-badge">#{{ order.pk }}</span>
+                            <span class="order-date">{{ order.order_date }}</span>
+                        </div>
+                        <div class="order-mobile-body">
+                            <div class="order-mobile-row">
+                                <span class="order-mobile-label">Total</span>
+                                <span class="order-amount">₹{{ order.total_cost }}</span>
+                            </div>
+                            <div class="order-mobile-row">
+                                <span class="order-mobile-label">Products</span>
+                                <span class="order-count-badge">{{ order.total_products }} item{{ order.total_products|pluralize }}</span>
+                            </div>
+                        </div>
+                        <a href="{% url 'order_detail' order.id %}" class="account-btn account-btn-primary" style="width: 100%; justify-content: center;">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="account-card">
+            <div class="account-card-body text-center" style="padding: 60px 30px;">
+                <div class="empty-state-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <h4 style="font-weight: 700; margin-bottom: 10px; color: #333;">No Orders Yet</h4>
+                <p style="color: #6c757d; max-width: 400px; margin: 0 auto 25px;">
+                    You haven't placed any orders yet. Start shopping to see your orders here!
+                </p>
+                <a href="{% url 'home' %}" class="account-btn account-btn-primary">
+                    <i class="fas fa-shopping-cart"></i> Start Shopping
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
 
 {% endblock %}

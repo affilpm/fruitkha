@@ -294,91 +294,752 @@
 
 <style>
     .small-image {
-        width: 100px; /* Adjust width as needed */
-        height: auto; /* Maintain aspect ratio */
+        width: 100px;
+        height: auto;
     }
-</style>
-
-<style>
-    /* Add CSS for white color and gap */
     .site-logo {
-        display: flex; /* Use flexbox */
-        align-items: center; /* Align items vertically */
+        display: flex;
+        align-items: center;
     }
-
     .site-logo img {
-        margin-right: 20px; /* Add margin to the right of the image */
+        margin-right: 20px;
     }
-
     .site-logo h3 {
-        color: white; /* Set text color to white */
-        margin: 0; /* Remove default margin */
+        color: white;
+        margin: 0;
     }
 </style>
 
 <style>
-    /* Custom CSS */
-    body {
-        background-color: #f8f9fa; /* Light gray background */
-        font-family: 'Arial', sans-serif;
-    }
-    .navbar {
-        padding: 1rem 0;
-        background-color: #007bff;
-    }
-    .navbar-brand {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: #fff;
-    }
-    .navbar-nav .nav-link {
-        color: #fff;
-        font-size: 1.1rem;
-    }
-    .profile-card, .wallet-card {
-        margin-top: 2rem;
-        padding: 2rem;
-        border-radius: 15px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        background-color: #fff; /* White background */
-    }
-    .profile-card h2, .wallet-card h2 {
-        font-size: 2rem;
-        margin-bottom: 1.5rem;
-        color: #007bff;
-        text-align: center; /* Center align heading */
-    }
-    .profile-info p, .wallet-info p {
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
-        text-align: left; /* Left align text */
-    }
-    .profile-info p strong, .wallet-info p strong {
-        display: inline-block;
-        width: 150px; /* Fixed width for labels */
-    }
-    .edit-btn {
-        margin-left: 0.5rem;
-    }
-    .card-footer {
-        padding: 1rem;
-        text-align: right;
-        background-color: #f8f9fa; /* Light gray background */
-    }
-    .btn-primary {
-        background-color: #007bff;
-        border: none;
-    }
-    .btn-secondary {
-        background-color: #6c757d;
-        border: none;
-    }
-    .btn-primary:hover, .btn-secondary:hover {
-        opacity: 0.9;
-    }
-    .divider {
+    /* ============================================
+       ACCOUNT SECTION — DESIGN SYSTEM
+       ============================================ */
+
+    /* --- Account Navigation Tabs --- */
+    .account-nav-section {
+        background: #fff;
         border-bottom: 1px solid #e9ecef;
-        margin: 1rem 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+    .account-nav-tabs {
+        list-style: none;
+        display: flex;
+        padding: 0;
+        margin: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 0;
+    }
+    .account-nav-tabs::-webkit-scrollbar {
+        display: none;
+    }
+    .account-nav-item {
+        flex-shrink: 0;
+    }
+    .account-nav-item a {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 16px 22px;
+        color: #6c757d;
+        text-decoration: none;
+        font-size: 0.92rem;
+        font-weight: 600;
+        border-bottom: 3px solid transparent;
+        transition: all 0.25s ease;
+        white-space: nowrap;
+    }
+    .account-nav-item a:hover {
+        color: #007bff;
+        background: #f8f9ff;
+        text-decoration: none;
+    }
+    .account-nav-item.active a {
+        color: #007bff;
+        border-bottom-color: #007bff;
+        background: #f0f4ff;
+    }
+    .account-nav-item a i {
+        font-size: 1rem;
+    }
+
+    /* --- Content Section --- */
+    .account-content-section {
+        padding: 35px 0 60px;
+        min-height: 50vh;
+    }
+
+    /* --- Account Card --- */
+    .account-card {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        overflow: hidden;
+        transition: box-shadow 0.3s ease;
+    }
+    .account-card:hover {
+        box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    }
+    .account-card-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 22px 25px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .account-card-header h4 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.15rem;
+        color: #1a1a2e;
+    }
+    .account-card-header p {
+        margin: 3px 0 0;
+        color: #6c757d;
+        font-size: 0.85rem;
+    }
+    .account-card-header-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: #eef2ff;
+        color: #007bff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        flex-shrink: 0;
+    }
+    .account-card-body {
+        padding: 25px;
+    }
+    .account-card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 25px;
+        border-top: 1px solid #f0f0f0;
+        background: #fafbfc;
+    }
+
+    /* --- Info List (Profile fields) --- */
+    .account-info-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .account-info-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 25px;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.2s ease;
+    }
+    .account-info-item:last-child {
+        border-bottom: none;
+    }
+    .account-info-item:hover {
+        background: #fafbfc;
+    }
+    .account-info-item.highlight-row {
+        background: #f8f9ff;
+    }
+    .account-info-label {
+        display: flex;
+        flex-direction: column;
+    }
+    .account-info-label .label-text {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #9ca3af;
+    }
+    .account-info-label .label-value {
+        font-size: 1.05rem;
+        font-weight: 500;
+        color: #1a1a2e;
+        margin-top: 4px;
+    }
+
+    /* --- Badges --- */
+    .account-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+    .badge-success {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    .badge-warning {
+        background: #fff8e1;
+        color: #f57f17;
+    }
+    .badge-danger {
+        background: #ffebee;
+        color: #c62828;
+    }
+
+    /* --- Buttons --- */
+    .account-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        border-radius: 8px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        text-decoration: none;
+        transition: all 0.25s ease;
+        white-space: nowrap;
+    }
+    .account-btn:hover {
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+    .account-btn-primary {
+        background: #007bff;
+        color: #fff;
+    }
+    .account-btn-primary:hover {
+        background: #0056b3;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+    }
+    .account-btn-outline {
+        background: #fff;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+    }
+    .account-btn-outline:hover {
+        background: #f8f9fa;
+        color: #333;
+        border-color: #adb5bd;
+    }
+    .account-btn-danger {
+        background: #dc3545;
+        color: #fff;
+    }
+    .account-btn-danger:hover {
+        background: #c82333;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(220,53,69,0.3);
+    }
+    .account-btn-success {
+        background: #28a745;
+        color: #fff;
+    }
+    .account-btn-success:hover {
+        background: #218838;
+        color: #fff;
+    }
+    .account-btn-sm {
+        padding: 7px 16px;
+        font-size: 0.82rem;
+    }
+    .account-edit-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 18px;
+        border-radius: 8px;
+        background: #f0f4ff;
+        color: #007bff;
+        border: 1px solid #d0dcff;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+    .account-edit-btn:hover {
+        background: #007bff;
+        color: #fff;
+        border-color: #007bff;
+    }
+
+    /* --- Wallet Card --- */
+    .account-wallet-card {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 60%, #003d82 100%);
+        border-radius: 16px;
+        padding: 35px 30px 25px;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 30px rgba(0,123,255,0.25);
+    }
+    .wallet-bg-icon {
+        position: absolute;
+        top: -15px;
+        right: -15px;
+        font-size: 6rem;
+        opacity: 0.08;
+        transform: rotate(-15deg);
+    }
+    .wallet-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.7);
+        margin-bottom: 10px;
+    }
+    .wallet-amount {
+        font-size: 2.8rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 8px;
+    }
+    .wallet-subtitle {
+        font-size: 0.88rem;
+        color: rgba(255,255,255,0.65);
+        margin-bottom: 25px;
+    }
+    .wallet-action-btn {
+        display: block;
+        text-align: center;
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-decoration: none;
+        transition: all 0.25s ease;
+    }
+    .wallet-action-btn:hover {
+        background: rgba(255,255,255,0.25);
+        color: #fff;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+    .wallet-page-card {
+        padding: 50px 40px 40px;
+        text-align: center;
+    }
+    .wallet-page-card .wallet-bg-icon {
+        top: -20px;
+        right: 50%;
+        transform: translateX(50%) rotate(-15deg);
+    }
+
+    /* Wallet Features */
+    .wallet-feature-item {
+        text-align: center;
+        padding: 20px 15px;
+        border-radius: 12px;
+        background: #f8f9ff;
+        height: 100%;
+    }
+    .wallet-feature-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #eef2ff;
+        color: #007bff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin: 0 auto 12px;
+    }
+    .wallet-feature-item h6 {
+        font-weight: 700;
+        color: #1a1a2e;
+        margin-bottom: 6px;
+    }
+    .wallet-feature-item p {
+        font-size: 0.82rem;
+        color: #6c757d;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    /* --- Account Table --- */
+    .account-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0;
+    }
+    .account-table thead {
+        background: #f8f9fa;
+    }
+    .account-table thead th {
+        padding: 14px 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        color: #6c757d;
+        border-bottom: 1px solid #e9ecef;
+        white-space: nowrap;
+    }
+    .account-table tbody tr {
+        transition: background 0.2s ease;
+    }
+    .account-table tbody tr:hover {
+        background: #f8f9ff;
+    }
+    .account-table tbody td {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: middle;
+        font-size: 0.92rem;
+        color: #333;
+    }
+    .account-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Order Badges */
+    .order-id-badge {
+        background: #eef2ff;
+        color: #007bff;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.88rem;
+    }
+    .order-date {
+        color: #6c757d;
+        font-size: 0.88rem;
+    }
+    .order-amount {
+        font-weight: 700;
+        color: #1a1a2e;
+        font-size: 1rem;
+    }
+    .order-count-badge {
+        background: #f0f0f0;
+        color: #555;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+
+    /* Order Status Badges */
+    .order-status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+    .status-delivered {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    .status-cancelled {
+        background: #ffebee;
+        color: #c62828;
+    }
+    .status-processing {
+        background: #e3f2fd;
+        color: #1565c0;
+    }
+    .status-pending {
+        background: #fff8e1;
+        color: #f57f17;
+    }
+
+    /* Mobile Order Cards */
+    .order-mobile-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 18px;
+        margin-bottom: 12px;
+    }
+    .order-mobile-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .order-mobile-body {
+        margin-bottom: 15px;
+    }
+    .order-mobile-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+    }
+    .order-mobile-label {
+        font-size: 0.82rem;
+        color: #6c757d;
+        font-weight: 600;
+    }
+    .order-item-mobile-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 18px;
+        margin-bottom: 12px;
+    }
+
+    /* --- Wishlist Styles --- */
+    .wishlist-product-img {
+        width: 65px;
+        height: 65px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid #e9ecef;
+    }
+    .wishlist-product-img-mobile {
+        width: 70px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid #e9ecef;
+        flex-shrink: 0;
+    }
+    .wishlist-product-name {
+        font-weight: 600;
+        color: #1a1a2e;
+        font-size: 0.95rem;
+    }
+    .wishlist-price {
+        font-weight: 700;
+        color: #1a1a2e;
+        font-size: 1rem;
+    }
+    .wishlist-price-old {
+        text-decoration: line-through;
+        color: #adb5bd;
+        font-size: 0.85rem;
+        margin-right: 6px;
+    }
+    .wishlist-mobile-card {
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 18px;
+        margin-bottom: 12px;
+    }
+    .wishlist-mobile-top {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    /* --- Address Cards --- */
+    .address-card {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .address-card:hover {
+        box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+        border-color: #d0dcff;
+    }
+    .address-card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 20px 22px;
+        border-bottom: 1px solid #f0f0f0;
+        background: #fafbfc;
+    }
+    .address-card-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: #eef2ff;
+        color: #007bff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+    .address-card-name {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: #1a1a2e;
+    }
+    .address-card-body {
+        padding: 18px 22px;
+        flex: 1;
+    }
+    .address-detail-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 7px 0;
+        font-size: 0.9rem;
+        color: #555;
+    }
+    .address-detail-row i {
+        color: #adb5bd;
+        width: 16px;
+        text-align: center;
+        margin-top: 3px;
+        flex-shrink: 0;
+    }
+    .address-card-footer {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 16px 22px;
+        border-top: 1px solid #f0f0f0;
+        background: #fafbfc;
+    }
+
+    /* --- Shipping Address Block (Order Detail) --- */
+    .shipping-address-block {
+        background: #f8f9ff;
+        border-radius: 10px;
+        padding: 20px;
+        border: 1px solid #e5eaff;
+    }
+
+    /* --- Refund Notice --- */
+    .refund-notice {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #e8f5e9;
+        color: #2e7d32;
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin-top: 15px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    /* --- Modal Styling --- */
+    .account-modal {
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    .account-modal .modal-header {
+        border-bottom: 1px solid #f0f0f0;
+        padding: 20px 25px;
+    }
+    .account-modal .modal-header .modal-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: #1a1a2e;
+    }
+    .account-modal .modal-body {
+        padding: 25px;
+    }
+    .account-form-label {
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        margin-bottom: 6px;
+    }
+    .account-form-input {
+        border-radius: 10px !important;
+        border: 1px solid #dee2e6 !important;
+        padding: 12px 16px !important;
+        font-size: 0.95rem !important;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+    }
+    .account-form-input:focus {
+        border-color: #007bff !important;
+        box-shadow: 0 0 0 3px rgba(0,123,255,0.1) !important;
+    }
+    .modal-btn-group {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 25px;
+    }
+
+    /* --- Empty State --- */
+    .empty-state-icon {
+        font-size: 4rem;
+        color: #007bff;
+        margin-bottom: 20px;
+        opacity: 0.25;
+    }
+
+    /* --- Help Card Icon --- */
+    .help-icon {
+        font-size: 2.5rem;
+        color: #17a2b8;
+        margin-bottom: 15px;
+    }
+
+    /* --- Responsive --- */
+    @media (max-width: 768px) {
+        .account-nav-item a {
+            padding: 12px 16px;
+            font-size: 0.82rem;
+        }
+        .account-nav-item a span {
+            display: none;
+        }
+        .account-nav-item a i {
+            font-size: 1.15rem;
+        }
+        .account-content-section {
+            padding: 20px 0 40px;
+        }
+        .account-card-header {
+            padding: 18px 20px;
+        }
+        .account-info-item {
+            padding: 14px 20px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .account-card-footer {
+            flex-direction: column;
+            gap: 10px;
+            padding: 15px 20px;
+        }
+        .account-card-footer .account-btn {
+            width: 100%;
+            justify-content: center;
+        }
+        .wallet-amount {
+            font-size: 2.2rem;
+        }
+        .wallet-page-card {
+            padding: 35px 25px 30px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .account-nav-item a {
+            padding: 12px 12px;
+        }
     }
 </style>
 </body>

@@ -16,6 +16,11 @@ urlpatterns = [
     path('resend-otp/', views.resend_otp, name='resend_otp'),
     path('delete-otp/', views.delete_otp, name='delete_otp'),
     
+    path('forgot-password/', views.forgot_password, name='forgot_password'),
+    path('forgot-password-otp/', views.forgot_password_otp, name='forgot_password_otp'),
+    path('resend-fp-otp/', views.resend_fp_otp, name='resend_fp_otp'),
+    path('reset-password/', views.reset_password, name='reset_password'),
+    
     
     path('single-product/<int:product_id>/', views.single_product, name='single_product'),
     

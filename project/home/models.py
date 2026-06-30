@@ -7,7 +7,7 @@ from django.utils import timezone
 
 
 class CustomUser(AbstractUser):
-    phone = models.CharField(max_length=15)
+    pass
     
     
     

@@ -4,59 +4,116 @@
 {% block content %}
 
 <!-- Breadcrumb section -->
-<div class="breadcrumb-section breadcrumb-bg" style="margin-bottom: 20px;">
+<div class="breadcrumb-section breadcrumb-bg" style="margin-bottom: 0;">
     <div class="container">
         <div class="row">
             <div class="col-lg-8 offset-lg-2 text-center">
                 <div class="breadcrumb-text">
-                    <p>See more Details</p>
-                    <h1>Account</h1>
+                    <p>Your Digital Wallet</p>
+                    <h1>Wallet</h1>
                 </div>
             </div>
         </div>
     </div>
-</div>  
+</div>
 
-<!-- Navigation bar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+<!-- Account Navigation Tabs -->
+<div class="account-nav-section">
     <div class="container">
-      <a class="navbar-brand" href="#">Your Profile</a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ml-auto">
-          <li class="nav-item active">
-            <a class="nav-link" href="{% url 'user_profile' %}">Profile <span class="sr-only">(current)</span></a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'orders'%}">Orders</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'wallet' %}">Wallet</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'wishlist' %}">Wishlist</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'address' %}">Addresses</a>
-          </li>
+        <ul class="account-nav-tabs">
+            <li class="account-nav-item">
+                <a href="{% url 'user_profile' %}">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </a>
+            </li>
+            <li class="account-nav-item">
+                <a href="{% url 'orders' %}">
+                    <i class="fas fa-box"></i>
+                    <span>Orders</span>
+                </a>
+            </li>
+            <li class="account-nav-item active">
+                <a href="{% url 'wallet' %}">
+                    <i class="fas fa-wallet"></i>
+                    <span>Wallet</span>
+                </a>
+            </li>
+            <li class="account-nav-item">
+                <a href="{% url 'wishlist' %}">
+                    <i class="fas fa-heart"></i>
+                    <span>Wishlist</span>
+                </a>
+            </li>
+            <li class="account-nav-item">
+                <a href="{% url 'address' %}">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Addresses</span>
+                </a>
+            </li>
         </ul>
-      </div>
     </div>
-</nav>
-    <div class="row">
-        {% comment %} <div class="col-md-8 offset-md-2"> {% endcomment %}
-            <div class="card">
-                <div class="card-header bg-danger text-white">
-                    
+</div>
+
+<!-- Wallet Content -->
+<div class="account-content-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Wallet Balance Card -->
+                <div class="account-wallet-card wallet-page-card">
+                    <div class="wallet-bg-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="wallet-label">CURRENT BALANCE</div>
+                    <div class="wallet-amount" style="font-size: 3.5rem;">₹{{ wallet.balance|default:"0.00" }}</div>
+                    <div class="wallet-subtitle">Your wallet balance can be used for future purchases</div>
                 </div>
-                <div class="card-body">
-                    <p>Your current wallet balance is: <strong>₹{{ wallet.balance }}</strong></p>
+
+                <!-- Wallet Info -->
+                <div class="account-card mt-4">
+                    <div class="account-card-header">
+                        <div class="account-card-header-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div>
+                            <h4>How It Works</h4>
+                            <p>Understanding your Fruitkha wallet</p>
+                        </div>
+                    </div>
+                    <div class="account-card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3 mb-md-0">
+                                <div class="wallet-feature-item">
+                                    <div class="wallet-feature-icon">
+                                        <i class="fas fa-undo-alt"></i>
+                                    </div>
+                                    <h6>Refunds</h6>
+                                    <p>Order cancellation refunds are credited directly to your wallet</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3 mb-md-0">
+                                <div class="wallet-feature-item">
+                                    <div class="wallet-feature-icon">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </div>
+                                    <h6>Easy Checkout</h6>
+                                    <p>Use your wallet balance at checkout for faster payments</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="wallet-feature-item">
+                                    <div class="wallet-feature-icon">
+                                        <i class="fas fa-shield-alt"></i>
+                                    </div>
+                                    <h6>Secure</h6>
+                                    <p>Your wallet balance is safe and protected at all times</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-           
         </div>
     </div>
 </div>

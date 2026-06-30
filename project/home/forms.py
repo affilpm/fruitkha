@@ -15,17 +15,17 @@ from django.utils.timezone import now, localtime
 class UserRegistrationForm(UserCreationForm):
     first_name = forms.CharField(max_length=30)
     last_name = forms.CharField(max_length=30)
-    phone = forms.CharField(max_length=15)
+    email = forms.EmailField(required=True)
 
     class Meta:
         model = CustomUser
-        fields = ['username', 'email', 'password1', 'password2', 'first_name', 'last_name', 'phone']
+        fields = ['username', 'email', 'password1', 'password2', 'first_name', 'last_name']
     
     def save(self, commit=True):
         user = super().save(commit=False)
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
-        user.phone = self.cleaned_data['phone']
+        user.email = self.cleaned_data['email']
         if commit:
             user.save()
         return user
@@ -47,13 +47,12 @@ class UserRegistrationForm(UserCreationForm):
 
         return username
     
-    def clean_phone(self):
-        phone = self.cleaned_data['phone']
-        
-        if len(phone) < 8:
-            raise forms.ValidationError("Phone number must be at least 8 digits long.")
-        
-        return phone
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        if CustomUser.objects.filter(email=email).exists():
+            raise forms.ValidationError("An account with this email already exists.")
+        return email
+
 
 
 # forms.py

@@ -3,125 +3,170 @@
 
 {% block content %}
     
-    <!-- breadcrumb-section -->
-    <div class="breadcrumb-section breadcrumb-bg">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-8 offset-lg-2 text-center">
-                    <div class="breadcrumb-text">
-                        <p>Explore and Dream</p>
-                        <h1>Wishlist</h1>
-                    </div>
+<!-- Breadcrumb section -->
+<div class="breadcrumb-section breadcrumb-bg" style="margin-bottom: 0;">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 offset-lg-2 text-center">
+                <div class="breadcrumb-text">
+                    <p>Your Saved Items</p>
+                    <h1>Wishlist</h1>
                 </div>
             </div>
         </div>
     </div>
-    <!-- end breadcrumb section -->
+</div>
 
-   <!-- Navigation bar -->
-   <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+<!-- Account Navigation Tabs -->
+<div class="account-nav-section">
     <div class="container">
-      <a class="navbar-brand" href="#">Your Wishlist</a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ml-auto">
-          <li class="nav-item active">
-            <a class="nav-link" href="{% url 'user_profile' %}">Profile <span class="sr-only">(current)</span></a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'orders'%}">Orders</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'wallet' %}">Wallet</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'wishlist' %}">Wishlist</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'address' %}">Addresses</a>
-          </li>
+        <ul class="account-nav-tabs">
+            <li class="account-nav-item">
+                <a href="{% url 'user_profile' %}">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </a>
+            </li>
+            <li class="account-nav-item">
+                <a href="{% url 'orders' %}">
+                    <i class="fas fa-box"></i>
+                    <span>Orders</span>
+                </a>
+            </li>
+            <li class="account-nav-item">
+                <a href="{% url 'wallet' %}">
+                    <i class="fas fa-wallet"></i>
+                    <span>Wallet</span>
+                </a>
+            </li>
+            <li class="account-nav-item active">
+                <a href="{% url 'wishlist' %}">
+                    <i class="fas fa-heart"></i>
+                    <span>Wishlist</span>
+                </a>
+            </li>
+            <li class="account-nav-item">
+                <a href="{% url 'address' %}">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Addresses</span>
+                </a>
+            </li>
         </ul>
-      </div>
     </div>
-</nav>
+</div>
 
-    <!-- wishlist -->
-    <div class="wishlist-section mt-5 mb-5">
-        <div class="container">
-            <div class="row">
-                {% if wishlist_items %}
-                <div class="col-lg-12"> <!-- Full width -->
-                    <div class="wishlist-table-wrap">
-                        <table class="table table-bordered">
-                            <thead class="thead-dark text-center">
-                                <tr>
-                                    <th scope="col ">Image</th>
-                                    <th scope="col">Product</th>
-                                    <th scope="col">Price</th>
-                                    <th scope="col">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in wishlist_items %}
-                                <tr>
-                                    <td class="text-center align-middle">
-                                        <img src="{{ item.product.image1.url }}" alt="{{ item.product.name }}" class="img-thumbnail" style="max-width: 80px; height: 80px;">
-                                    </td>
-                                    <td class="text-center align-middle">{{ item.product.name }}</td>
-                                    <td class="text-center align-middle">
-                                        {% if item.product.offer %}
-                                        <del>₹{{ item.product.original_price }}</del>
-                                        ₹{{ item.product.price }}
+<!-- Wishlist Content -->
+<div class="account-content-section">
+    <div class="container">
+        {% if wishlist_items %}
+        <div class="account-card">
+            <div class="account-card-header">
+                <div class="account-card-header-icon" style="background: #fff0f3; color: #e74c6f;">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div>
+                    <h4>My Wishlist</h4>
+                    <p>Items you've saved for later — {{ wishlist_items|length }} item{{ wishlist_items|length|pluralize }}</p>
+                </div>
+            </div>
+            <div class="account-card-body" style="padding: 0;">
+                <!-- Desktop Table View -->
+                <div class="table-responsive d-none d-md-block">
+                    <table class="account-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">Image</th>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in wishlist_items %}
+                            <tr>
+                                <td>
+                                    <img src="{{ item.product.image1.url }}" alt="{{ item.product.name }}" 
+                                         class="wishlist-product-img">
+                                </td>
+                                <td>
+                                    <span class="wishlist-product-name">{{ item.product.name }}</span>
+                                </td>
+                                <td>
+                                    {% if item.product.offer %}
+                                        <span class="wishlist-price-old">₹{{ item.product.original_price }}</span>
+                                        <span class="wishlist-price">₹{{ item.product.price }}</span>
                                     {% else %}
-                                        ${{ item.product.price }} 
+                                        <span class="wishlist-price">₹{{ item.product.price }}</span>
                                     {% endif %}
-                                    </td>
-                                    <td class="text-center align-middle">
-                                      
-                                    <!-- Example form for adding to cart from wishlist -->
-                                    <form action="{% url 'wishlist_to_cart' %}" method="post" id="cartForm" onsubmit="return validateCart()">
+                                </td>
+                                <td>
+                                    <form action="{% url 'wishlist_to_cart' %}" method="post" style="display: inline;">
                                         {% csrf_token %}
-                                        <input type="hidden" name="product_id" value="{{ item.product.id }}"> <!-- Use item.product.id here -->
-                                        <button type="submit" class="cart-btn btn-color" id="addToCartBtn" {% if not user.is_authenticated %}onclick="return promptSignIn(event)" {% endif %}>
+                                        <input type="hidden" name="product_id" value="{{ item.product.id }}">
+                                        <button type="submit" class="account-btn account-btn-sm account-btn-primary"
+                                                {% if not user.is_authenticated %}onclick="return promptSignIn(event)"{% endif %}>
                                             <i class="fas fa-shopping-cart"></i> Add to Cart
                                         </button>
                                     </form>
-                                    
-                                    </td>
-                                    
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Mobile Card View -->
+                <div class="d-md-none" style="padding: 16px;">
+                    {% for item in wishlist_items %}
+                    <div class="wishlist-mobile-card">
+                        <div class="wishlist-mobile-top">
+                            <img src="{{ item.product.image1.url }}" alt="{{ item.product.name }}" 
+                                 class="wishlist-product-img-mobile">
+                            <div class="wishlist-mobile-info">
+                                <span class="wishlist-product-name">{{ item.product.name }}</span>
+                                <div class="mt-1">
+                                    {% if item.product.offer %}
+                                        <span class="wishlist-price-old">₹{{ item.product.original_price }}</span>
+                                        <span class="wishlist-price">₹{{ item.product.price }}</span>
+                                    {% else %}
+                                        <span class="wishlist-price">₹{{ item.product.price }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <form action="{% url 'wishlist_to_cart' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="product_id" value="{{ item.product.id }}">
+                            <button type="submit" class="account-btn account-btn-primary" 
+                                    style="width: 100%; justify-content: center;"
+                                    {% if not user.is_authenticated %}onclick="return promptSignIn(event)"{% endif %}>
+                                <i class="fas fa-shopping-cart"></i> Add to Cart
+                            </button>
+                        </form>
                     </div>
+                    {% endfor %}
                 </div>
-                {% else %}
-                <div class="col-lg-12 text-center"> <!-- Full width -->
-                    <p class="empty-wishlist-message">Your wishlist is empty.</p>
-                    <a href="{% url 'home' %}" class="btn btn-primary">Continue Shopping</a>
-                </div>
-                {% endif %}
             </div>
         </div>
-    </div>
-
-    <!-- Additional Suggestions -->
-    <div class="container text-center mt-5">
-        <div class="row mt-3">
-            <div class="col-md-4">
-                <p>Discover exclusive deals and discounts</p>
-            </div>
-            <div class="col-md-4">
-                <p>Explore our range of organic products</p>
-            </div>
-            <div class="col-md-4">
-                <p>Connect with us on social media for updates</p>
+        {% else %}
+        <!-- Empty State -->
+        <div class="account-card">
+            <div class="account-card-body text-center" style="padding: 60px 30px;">
+                <div class="empty-state-icon" style="color: #e74c6f;">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <h4 style="font-weight: 700; margin-bottom: 10px; color: #333;">Your Wishlist is Empty</h4>
+                <p style="color: #6c757d; max-width: 400px; margin: 0 auto 25px;">
+                    Save items you love to your wishlist and come back to them anytime.
+                </p>
+                <a href="{% url 'home' %}" class="account-btn account-btn-primary">
+                    <i class="fas fa-shopping-bag"></i> Browse Products
+                </a>
             </div>
         </div>
+        {% endif %}
     </div>
-
+</div>
 
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

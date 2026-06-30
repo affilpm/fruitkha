@@ -130,19 +130,8 @@
                         </div>
                     {% endif %}
                 </div>
-                <!-- Phone number field -->
-                <div class="form-group">
-                    <label for="id_phone">Phone</label>
-                    <input type="text" class="form-control" id="id_phone" name="phone" placeholder="Enter your phone number" {% if form.phone.value %} value="{{ form.phone.value }}" {% endif %} required>
-                    {% if form.phone.errors %}
-                        <div class="alert alert-danger">
-                            {% for error in form.phone.errors %}
-                                {{ error }}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
                 <!-- Password fields -->
+
                 <div class="form-group">
                     <label for="id_password1">Password</label>
                     <input type="password" class="form-control" id="id_password1" name="password1" placeholder="Enter your password" required>

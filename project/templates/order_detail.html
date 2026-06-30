@@ -3,147 +3,306 @@
 {% block content %}
 
 <!-- Breadcrumb section -->
-<div class="breadcrumb-section breadcrumb-bg" style="margin-bottom: 20px;">
+<div class="breadcrumb-section breadcrumb-bg" style="margin-bottom: 0;">
     <div class="container">
         <div class="row">
             <div class="col-lg-8 offset-lg-2 text-center">
                 <div class="breadcrumb-text">
-                    <p>See more Details</p>
-                    <h1>Account</h1>
+                    <p>Order Information</p>
+                    <h1>Order #{{ order.pk }}</h1>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-{% comment %} <div class="container mt-5"> {% endcomment %}
-    <div class="card">
-        <div class="card-header bg-danger text-white">
-            <h2 class="mb-0">Order #{{ order.pk }}</h2>
+<!-- Order Detail Content -->
+<div class="account-content-section">
+    <div class="container">
+        <!-- Back Button -->
+        <div class="mb-4">
+            <a href="{% url 'orders' %}" class="account-btn account-btn-outline">
+                <i class="fas fa-arrow-left"></i> Back to Orders
+            </a>
         </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6 mb-4">
-                    <h5>Order Details</h5>
-                    <p><strong>Order Date:</strong> {{ order.order_date }}</p>
-                    <p><strong>Subtotal:</strong> ₹{{ order.subtotal }}</p>
-                    {% if order.coupon %}
-                    <p><strong>Coupon Applied:</strong> {{ order.coupon.code }}</p>
-                    <p><strong>Coupon Discount:</strong> ₹{{ order.coupon.discount_amount }}</p>
-                    {% endif %}
-                    <p><strong>Total Amount Paid:</strong> ₹{{ order.total_cost }}</p>
-                    <p><strong>Payment Method:</strong> {{ order.payment_method }}</p>
-                    {% if order.payment_method.lower == 'razorpay' %}
-                    <p><strong>Razorpay Payment Status:</strong> {% if is_paid %}Paid{% else %}<span class="failed-status text-danger">Not paid</span>{% endif %}</p>
-                    {%endif%}
-                    {% if transaction_amount %}
-                        <div class="alert alert-success" role="alert">
-                            <strong>Refunded amount:</strong>₹{{ transaction_amount }} has been refunded to your account.
+
+        <div class="row">
+            <!-- Order Details Card -->
+            <div class="col-lg-6 mb-4">
+                <div class="account-card h-100">
+                    <div class="account-card-header">
+                        <div class="account-card-header-icon">
+                            <i class="fas fa-receipt"></i>
                         </div>
-                    {% endif %}
-                    
-                   
-                   
-                </div>
-                <div class="col-md-6">
-                    <h5>Shipping Address</h5>
-                    <p><strong>Name:</strong> {{ order.shipping_address.name }}</p>
-                    <p><strong>Phone:</strong> {{ order.shipping_address.phone_number }}</p>
-                    <p><strong>Address:</strong> {{ order.shipping_address.street }}, {{ order.shipping_address.city }}, {{ order.shipping_address.state }}, {{ order.shipping_address.country }}, {{ order.shipping_address.postal_code }}
-                    {% if is_paid or order.payment_method == 'cash_on_delivery' %}
-                    <div class="">
-                        <a href="{% url 'order_invoice' order.pk %}" class="btn btn-primary">View Invoice</a>
-                        
-                    </div>  
-                    {% endif %}
-                   
-
-
-                   
-                </div>
-               
-            </div>
-            <hr>
-            <div class="row">
-                <div class="col">
-                    <h5>Order Items</h5>
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Image</th>
-                                    <th scope="col">Name</th>
-                                    <th scope="col">Description</th>
-                                    <th scope="col">Quantity</th>
-                                    <th scope="col">Price</th>
-                                    <th scope="col">Order Status</th>
-                                    <th scope="col">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in order.items.all %}
-                                <tr>
-                                    <td>
-                                        <img src="{{ item.product.image1.url }}" alt="{{ item.product.name }}" class="img-thumbnail" style="max-width: 60px; height: 60px;">
-                                    </td>
-                                    <td>{{ item.product.name }}</td>
-                                    <td>{{ item.product.description|truncatechars:50 }}</td> <!-- Limit description to 50 characters -->
-                                    <td>{{ item.quantity_ordered }} kg</td>
-                                    <td>
-                                        {% if item.product.offer %}
-                                            <del>₹{{ item.original_price_total }}</del>
-                                            ₹{{ item.total_price }}
+                        <div>
+                            <h4>Order Details</h4>
+                            <p>Summary for Order #{{ order.pk }}</p>
+                        </div>
+                    </div>
+                    <div class="account-card-body">
+                        <ul class="account-info-list">
+                            <li class="account-info-item">
+                                <div class="account-info-label">
+                                    <span class="label-text">Order Date</span>
+                                    <span class="label-value">{{ order.order_date }}</span>
+                                </div>
+                            </li>
+                            <li class="account-info-item">
+                                <div class="account-info-label">
+                                    <span class="label-text">Subtotal</span>
+                                    <span class="label-value">₹{{ order.subtotal }}</span>
+                                </div>
+                            </li>
+                            {% if order.coupon %}
+                            <li class="account-info-item">
+                                <div class="account-info-label">
+                                    <span class="label-text">Coupon Applied</span>
+                                    <span class="label-value">
+                                        <span class="account-badge badge-success">{{ order.coupon.code }}</span>
+                                    </span>
+                                </div>
+                            </li>
+                            <li class="account-info-item">
+                                <div class="account-info-label">
+                                    <span class="label-text">Coupon Discount</span>
+                                    <span class="label-value" style="color: #28a745;">-₹{{ order.coupon.discount_amount }}</span>
+                                </div>
+                            </li>
+                            {% endif %}
+                            <li class="account-info-item highlight-row">
+                                <div class="account-info-label">
+                                    <span class="label-text" style="font-weight: 700;">Total Paid</span>
+                                    <span class="label-value" style="font-size: 1.3rem; font-weight: 700; color: #007bff;">₹{{ order.total_cost }}</span>
+                                </div>
+                            </li>
+                            <li class="account-info-item">
+                                <div class="account-info-label">
+                                    <span class="label-text">Payment Method</span>
+                                    <span class="label-value">{{ order.payment_method }}</span>
+                                </div>
+                            </li>
+                            {% if order.payment_method.lower == 'razorpay' %}
+                            <li class="account-info-item">
+                                <div class="account-info-label">
+                                    <span class="label-text">Payment Status</span>
+                                    <span class="label-value">
+                                        {% if is_paid %}
+                                            <span class="account-badge badge-success"><i class="fas fa-check-circle"></i> Paid</span>
                                         {% else %}
-                                            ₹{{ item.total_price }} 
+                                            <span class="account-badge badge-danger"><i class="fas fa-times-circle"></i> Not Paid</span>
                                         {% endif %}
-                                    </td>
-                                    <td>
+                                    </span>
+                                </div>
+                            </li>
+                            {% endif %}
+                        </ul>
+                        {% if transaction_amount %}
+                        <div class="refund-notice">
+                            <i class="fas fa-check-circle"></i>
+                            <span><strong>Refunded:</strong> ₹{{ transaction_amount }} has been credited to your wallet.</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipping Address Card -->
+            <div class="col-lg-6 mb-4">
+                <div class="account-card h-100">
+                    <div class="account-card-header">
+                        <div class="account-card-header-icon" style="background: #f0f4ff; color: #007bff;">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div>
+                            <h4>Shipping Address</h4>
+                            <p>Delivery location for this order</p>
+                        </div>
+                    </div>
+                    <div class="account-card-body">
+                        <div class="shipping-address-block">
+                            <div class="address-detail-row">
+                                <i class="fas fa-user"></i>
+                                <span>{{ order.shipping_address.name }}</span>
+                            </div>
+                            <div class="address-detail-row">
+                                <i class="fas fa-phone-alt"></i>
+                                <span>{{ order.shipping_address.phone_number }}</span>
+                            </div>
+                            <div class="address-detail-row">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>{{ order.shipping_address.street }}, {{ order.shipping_address.city }}, {{ order.shipping_address.state }}, {{ order.shipping_address.country }}, {{ order.shipping_address.postal_code }}</span>
+                            </div>
+                        </div>
+                        {% if is_paid or order.payment_method == 'cash_on_delivery' %}
+                        <div style="margin-top: 25px;">
+                            <a href="{% url 'order_invoice' order.pk %}" class="account-btn account-btn-primary" style="width: 100%; justify-content: center;">
+                                <i class="fas fa-file-invoice"></i> View Invoice
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Items Card -->
+        <div class="account-card">
+            <div class="account-card-header">
+                <div class="account-card-header-icon" style="background: #fff8f0; color: #f0820e;">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <div>
+                    <h4>Order Items</h4>
+                    <p>Products included in this order</p>
+                </div>
+            </div>
+            <div class="account-card-body" style="padding: 0;">
+                <!-- Desktop Table View -->
+                <div class="table-responsive d-none d-md-block">
+                    <table class="account-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 70px;">Image</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Qty</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td>
+                                    <img src="{{ item.product.image1.url }}" alt="{{ item.product.name }}" 
+                                         class="wishlist-product-img" style="width: 55px; height: 55px;">
+                                </td>
+                                <td>
+                                    <span class="wishlist-product-name">{{ item.product.name }}</span>
+                                </td>
+                                <td>
+                                    <span style="color: #6c757d; font-size: 0.85rem;">{{ item.product.description|truncatechars:50 }}</span>
+                                </td>
+                                <td>
+                                    <span class="order-count-badge">{{ item.quantity_ordered }} kg</span>
+                                </td>
+                                <td>
+                                    {% if item.product.offer %}
+                                        <span class="wishlist-price-old">₹{{ item.original_price_total }}</span>
+                                        <span class="wishlist-price">₹{{ item.total_price }}</span>
+                                    {% else %}
+                                        <span class="wishlist-price">₹{{ item.total_price }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="order-status-badge 
+                                        {% if item.status == 'Delivered' %}status-delivered
+                                        {% elif item.status == 'Cancelled' %}status-cancelled
+                                        {% elif item.status == 'Processing' %}status-processing
+                                        {% else %}status-pending{% endif %}">
                                         {{ item.status }}
-                                    </td>
-                                    <td>
-                                        {% if item.status == 'Pending' or item.status == 'Processing' %}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if item.status == 'Pending' or item.status == 'Processing' %}
                                         {% if order.payment_method|lower == 'razorpay' %}
                                             {% if not is_paid %}
                                                 <form id="orderDataForm" method="POST" action="{% url 'retry_razorpay' %}">
                                                     {% csrf_token %}
                                                     <input type="hidden" name="order_id" value="{{ order.id }}">
-                                                    <!-- Add other hidden fields for additional order data -->
-                                                    <button type="submit" class="btn btn-danger">Retry payment</button>
+                                                    <button type="submit" class="account-btn account-btn-sm account-btn-danger">
+                                                        <i class="fas fa-redo"></i> Retry
+                                                    </button>
                                                 </form>
                                             {% else %}
                                                 {% if item.has_cancellation_request %}
-                                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#cancellationModal-{{ item.id }}" disabled>
-                                                        Request has been sent
+                                                    <button type="button" class="account-btn account-btn-sm account-btn-outline" disabled style="opacity: 0.6;">
+                                                        <i class="fas fa-clock"></i> Request Sent
                                                     </button>
                                                 {% else %}
-                                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#cancellationModal-{{ item.id }}">
-                                                        Request Cancellation
+                                                    <button type="button" class="account-btn account-btn-sm account-btn-danger" data-toggle="modal" data-target="#cancellationModal-{{ item.id }}">
+                                                        <i class="fas fa-ban"></i> Cancel
                                                     </button>
                                                 {% endif %}
                                             {% endif %}
                                         {% else %}
                                             {% if item.has_cancellation_request %}
-                                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#cancellationModal-{{ item.id }}" disabled>
-                                                    Request has been sent
+                                                <button type="button" class="account-btn account-btn-sm account-btn-outline" disabled style="opacity: 0.6;">
+                                                    <i class="fas fa-clock"></i> Request Sent
                                                 </button>
                                             {% else %}
-                                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#cancellationModal-{{ item.id }}">
-                                                    Request Cancellation
+                                                <button type="button" class="account-btn account-btn-sm account-btn-danger" data-toggle="modal" data-target="#cancellationModal-{{ item.id }}">
+                                                    <i class="fas fa-ban"></i> Cancel
                                                 </button>
                                             {% endif %}
                                         {% endif %}
                                     {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-            <div class="col-md-6 d-flex align-items-center justify-content-center">
-                <div>
-                    <a href="{% url 'orders' %}" class="btn btn-secondary">Back</a>
+
+                <!-- Mobile Card View -->
+                <div class="d-md-none" style="padding: 16px;">
+                    {% for item in order.items.all %}
+                    <div class="order-item-mobile-card">
+                        <div class="d-flex align-items-center mb-3" style="gap: 15px;">
+                            <img src="{{ item.product.image1.url }}" alt="{{ item.product.name }}" 
+                                 class="wishlist-product-img-mobile">
+                            <div>
+                                <span class="wishlist-product-name">{{ item.product.name }}</span>
+                                <div class="mt-1">
+                                    <span class="order-status-badge 
+                                        {% if item.status == 'Delivered' %}status-delivered
+                                        {% elif item.status == 'Cancelled' %}status-cancelled
+                                        {% elif item.status == 'Processing' %}status-processing
+                                        {% else %}status-pending{% endif %}">
+                                        {{ item.status }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="order-mobile-body">
+                            <div class="order-mobile-row">
+                                <span class="order-mobile-label">Quantity</span>
+                                <span class="order-count-badge">{{ item.quantity_ordered }} kg</span>
+                            </div>
+                            <div class="order-mobile-row">
+                                <span class="order-mobile-label">Price</span>
+                                {% if item.product.offer %}
+                                    <span>
+                                        <span class="wishlist-price-old">₹{{ item.original_price_total }}</span>
+                                        <span class="wishlist-price">₹{{ item.total_price }}</span>
+                                    </span>
+                                {% else %}
+                                    <span class="wishlist-price">₹{{ item.total_price }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if item.status == 'Pending' or item.status == 'Processing' %}
+                            {% if order.payment_method|lower == 'razorpay' and not is_paid %}
+                                <form method="POST" action="{% url 'retry_razorpay' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="order_id" value="{{ order.id }}">
+                                    <button type="submit" class="account-btn account-btn-danger" style="width: 100%; justify-content: center;">
+                                        <i class="fas fa-redo"></i> Retry Payment
+                                    </button>
+                                </form>
+                            {% elif item.has_cancellation_request %}
+                                <button type="button" class="account-btn account-btn-outline" disabled style="width: 100%; justify-content: center; opacity: 0.6;">
+                                    <i class="fas fa-clock"></i> Cancellation Request Sent
+                                </button>
+                            {% else %}
+                                <button type="button" class="account-btn account-btn-danger" data-toggle="modal" data-target="#cancellationModal-{{ item.id }}" style="width: 100%; justify-content: center;">
+                                    <i class="fas fa-ban"></i> Request Cancellation
+                                </button>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -151,12 +310,15 @@
 </div>
 
 {% for item in order.items.all %}
-<!-- Modal for each order item -->
+<!-- Cancellation Modal for each order item -->
 <div class="modal fade" id="cancellationModal-{{ item.id }}" tabindex="-1" role="dialog" aria-labelledby="cancellationModalLabel-{{ item.id }}" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content account-modal">
             <div class="modal-header">
-                <h5 class="modal-title" id="cancellationModalLabel-{{ item.id }}">Request Cancellation for Order Item #{{ item.id }}</h5>
+                <h5 class="modal-title" id="cancellationModalLabel-{{ item.id }}">
+                    <i class="fas fa-exclamation-triangle mr-2" style="color: #dc3545;"></i>
+                    Cancel Item — {{ item.product.name }}
+                </h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -165,9 +327,9 @@
                 <form id="cancellationForm-{{ item.id }}" method="post" action="{% url 'request_item_cancellation' item.id %}">
                     {% csrf_token %}
                     {{ form.as_p }}
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Submit Request</button>
+                    <div class="modal-btn-group">
+                        <button type="button" class="account-btn account-btn-outline" data-dismiss="modal">Keep Item</button>
+                        <button type="submit" class="account-btn account-btn-danger">Submit Cancellation</button>
                     </div>
                 </form>
             </div>
@@ -187,11 +349,5 @@
         alert("A cancellation request for this item has already been sent.");
     </script>
 {% endif %}
-
-<style>
-    .card-body .row {
-        margin-bottom: 10px; /* Reduce bottom margin for rows */
-    }
-</style>
 
 {% endblock %}

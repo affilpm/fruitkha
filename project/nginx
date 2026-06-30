@@ -3,11 +3,13 @@ server {
     server_name your.server.ip.or.domain;
 
     location /static/ {
-        alias /home/ubuntu/Fruitkha/project/assets/;
+        alias /var/www/fruitkha-assets/;
+        autoindex on;
     }
 
     location /media/ {
-        alias /home/ubuntu/Fruitkha/project/media/;
+        alias /var/www/fruitkha-media/;
+        autoindex on;
     }
 
     location / {
