@@ -15,8 +15,7 @@
 
 	{% block extra_css %}{% endblock %}
 	<!-- google font -->
-	<link href="{% static 'https://fonts.googleapis.com/css?family=Open+Sans:300,400,700'%}" rel="stylesheet">
-	<link href="{% static 'https://fonts.googleapis.com/css?family=Poppins:400,700&display=swap'%}" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 	<!-- fontawesome -->
 	<link rel="stylesheet" href="{% static 'assets/css/all.min.css'%}">
 	<!-- bootstrap -->
@@ -46,6 +45,59 @@
 	
 
 
+    <style>
+        :root {
+            --brand-primary: #f28123;
+            --brand-primary-hover: #e07218;
+            --brand-dark: #051922;
+            --brand-light: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 10px 30px rgba(0, 0, 0, 0.12);
+            --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        body {
+            font-family: 'Inter', sans-serif !important;
+            background-color: #f8f9fa;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 700;
+        }
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: var(--shadow-soft);
+            transition: var(--transition-smooth);
+        }
+        .glass-panel:hover {
+            box-shadow: var(--shadow-hover);
+        }
+        .modern-btn {
+            background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover));
+            color: #fff !important;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 30px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: var(--transition-smooth);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(242, 129, 35, 0.3);
+        }
+        .modern-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(242, 129, 35, 0.4);
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
 

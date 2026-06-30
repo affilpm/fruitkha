@@ -130,7 +130,7 @@ def apply_coupon(request):
                 coupon = CouponModel.objects.get(code__iexact=code, valid_from__lte=now, valid_to__gte=now, is_active=True)
                 request.session['coupon_id'] = coupon.id
             except CouponModel.DoesNotExist:
-                messages.error(request, "Invalid coupon code or the coupon is inactive.")
+                request.session['coupon_error'] = "Invalid coupon code or the coupon is inactive."
                 request.session['coupon_id'] = None
     return redirect('checkout')
 
@@ -156,6 +156,10 @@ def add_address_checkout(request):
 def checkout(request):
     cart_items = Cart.objects.filter(user=request.user, product__is_listed=True)
 
+    out_of_stock_items = [item for item in cart_items if item.product.stock <= 0]
+    if out_of_stock_items:
+        return redirect('cart')
+
     subtotal = Decimal(0)
     for item in cart_items:
         item.subtotal = item.product.price * item.quantity
@@ -166,7 +170,7 @@ def checkout(request):
     coupon_id = request.session.get('coupon_id')
     discount_amount = Decimal(0)
     coupon = None
-    error_message = None
+    error_message = request.session.pop('coupon_error', None)
 
     if coupon_id:
         CouponModel = apps.get_model('orders', 'Coupon') 

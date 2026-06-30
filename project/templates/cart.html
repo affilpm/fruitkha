@@ -40,14 +40,30 @@
                         <tbody>
                             {% for item in cart_items %}
                             {% if item.quantity > 0 %}
-                            {% if item.available %}
-                            <tr class="table-head-row">
+                            <tr class="table-head-row {% if not item.available or item.product.stock <= 0 %}out-of-stock-row{% endif %}">
                                 <td class="text-center align-middle">
-                                    <img src="{{ item.product.image1.url }}" alt="{{ item.product.name }}" class="img-thumbnail" style="max-width: 100px; height: 100px;">
+                                    <div class="position-relative">
+                                        <img src="{{ item.product.image1.url }}" alt="{{ item.product.name }}" class="img-thumbnail" style="max-width: 100px; height: 100px;">
+                                        {% if not item.available or item.product.stock <= 0 %}
+                                        <span class="badge badge-danger position-absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">Out of Stock</span>
+                                        {% endif %}
+                                    </div>
                                 </td>
-                                <td>{{ item.product.name }}</td>
                                 <td>
-                                    <input type="number" class="quantity-input" data-product-id="{{ item.product.id }}" name="quantity" min="1" max="{{ item.product.stock }}" value="{{ item.quantity }}">
+                                    {{ item.product.name }}
+                                    {% if not item.available or item.product.stock <= 0 %}
+                                    <br><small class="text-danger">Currently unavailable</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-inline-flex align-items-center" style="gap: 8px;">
+                                        <div class="d-inline-flex align-items-center quantity-control" style="background: #f3f4f6; padding: 4px; border-radius: 20px;">
+                                            <button class="btn btn-sm btn-light minus-btn shadow-none" type="button" style="border-radius: 50%; width: 28px; height: 28px; padding: 0; font-weight:bold;" {% if not item.available or item.product.stock <= 0 %}disabled{% endif %}>-</button>
+                                            <input type="number" class="quantity-input border-0 bg-transparent text-center mx-1 mb-0" data-product-id="{{ item.product.id }}" name="quantity" min="1" max="{{ item.product.stock }}" value="{{ item.quantity }}" style="width: 40px; font-weight: bold; pointer-events: none;" {% if not item.available or item.product.stock <= 0 %}disabled{% endif %} readonly>
+                                            <button class="btn btn-sm btn-light plus-btn shadow-none" type="button" style="border-radius: 50%; width: 28px; height: 28px; padding: 0; font-weight:bold;" {% if not item.available or item.product.stock <= 0 %}disabled{% endif %}>+</button>
+                                        </div>
+                                        <span class="text-muted fw-bold">kg</span>
+                                    </div>
                                 </td>
                                 <td>{% if item.product.offer %}
                                     <del>₹{{ item.product.original_price }}</del>
@@ -55,19 +71,13 @@
                                 {% else %}
                                     ₹{{ item.product.price }} 
                                 {% endif %}</td>
-                                <td>₹{{ item.subtotal }}</td>
+                                <td class="item-subtotal-display">₹{{ item.subtotal }}</td>
                                 <td>
                                     <button type="button" class="btn btn-danger btn-sm remove-btn" data-product-id="{{ item.product.id }}">
                                         Remove
                                     </button>
                                 </td>
                             </tr>
-                            {% else %}
-                            <!-- Show product unavailable message -->
-                            <tr>
-                                <td colspan="6" class="text-center unavailable-message">Product "{{ item.product.name }}" is currently unavailable.</td>
-                            </tr>
-                            {% endif %}
                             {% endif %}
                             {% endfor %}
                         </tbody>
@@ -90,31 +100,36 @@
                         <tbody>
                             <tr class="total-data">
                                 <td><strong>Subtotal: </strong></td>
-                                <td>₹{{ total_cost }}</td>
+                                <td id="cart-subtotal">₹{{ total_cost }}</td>
                             </tr>
                             
                             <tr class="total-data">
                                 <td><strong>Total: </strong></td>
-                                <td>₹{{ total_cost }}</td>
+                                <td id="cart-total">₹{{ total_cost }}</td>
                             </tr>
                         </tbody>
                     </table>
 
                     <form id="checkout-form" action="{% url 'checkout' %}" method="POST">
                         {% csrf_token %}
-                        <div class="cart-buttons">
+                        <div class="cart-buttons text-center">
+                            {% if has_out_of_stock %}
+                            <p class="text-danger small mb-2 fw-bold">Remove out-of-stock items to checkout</p>
+                            <button type="button" class="boxed-btn checkout-btn" disabled style="opacity: 0.5; cursor: not-allowed;">Proceed to Checkout</button>
+                            {% else %}
                             <button type="submit" class="boxed-btn checkout-btn">Proceed to Checkout</button>
+                            {% endif %}
                         </div>
                     </form>
                 </div>
             </div>
             <div class="text-center mt-4">
-                <a href="{% url 'home' %}" class="btn btn-primary">Continue Shopping</a>
+                <a href="{% url 'home' %}" class="btn btn-primary continue-shopping">Continue Shopping</a>
             </div>
             {% else %}
             <div class="col-lg-12 text-center">
                 <p class="empty-cart-message">Your cart is empty.</p>
-                <a href="{% url 'home' %}" class="btn btn-primary">Continue Shopping</a>
+                <a href="{% url 'home' %}" class="btn btn-primary continue-shopping">Continue Shopping</a>
             </div>
             {% endif %}
         </div>
@@ -140,69 +155,168 @@
 </div>
 
 <style>
-    body {
-        background-color: #f8f9fa;
-        color: #333; /* Text color */
-    }
-    
+    /* Cart Table Modernization */
     .cart-section {
-        padding: 50px 0;
+        padding: 60px 0;
     }
     .cart-table-wrap {
-        overflow-x: auto;
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: var(--shadow-soft);
+        padding: 30px;
+        margin-bottom: 30px;
+        border: 1px solid rgba(0,0,0,0.03);
     }
     .cart-table {
         width: 100%;
-        border-collapse: collapse;
+        border-collapse: separate;
         border-spacing: 0;
-        margin-bottom: 20px;
     }
     .cart-table-head th {
-        padding: 10px;
+        padding: 15px 20px;
         text-align: left;
-        background-color: #f5f5f5;
-        border-bottom: 1px solid #ddd;
-        font-weight: bold;
-        color: #333; /* Table heading color */
+        background-color: transparent;
+        border-bottom: 2px solid #f3f4f6;
+        font-weight: 700;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.85rem;
+    }
+    .cart-table tbody tr {
+        transition: var(--transition-smooth);
+    }
+    .cart-table tbody tr.out-of-stock-row {
+        opacity: 0.6;
+        filter: grayscale(100%);
+    }
+    .cart-table tbody tr:hover {
+        background-color: #f8fafc;
+        transform: translateY(-2px);
     }
     .cart-table tbody tr td {
-        padding: 10px;
-        border-bottom: 1px solid #ddd;
+        padding: 20px;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+        font-size: 1.05rem;
+        font-weight: 500;
+        color: var(--brand-dark);
     }
-    .cart-table tbody tr td:first-child {
-        width: 120px;
-    }
-    .cart-table tbody tr td input[type="number"] {
-        width: 50px;
-        text-align: center;
-    }
-    .cart-buttons {
-        text-align: center;
-        margin-top: 20px;
-    }
-    .checkout-btn {
-        background-color: #4CAF50; /* Green */
+    .cart-table tbody tr td img.img-thumbnail {
+        border-radius: 12px;
         border: none;
-        color: white;
-        padding: 15px 32px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .quantity-input {
+        width: 70px !important;
         text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 16px;
-        cursor: pointer;
-        border-radius: 5px;
-        transition: background-color 0.3s ease;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 8px;
+        font-weight: 600;
+        color: var(--brand-dark);
+        transition: var(--transition-smooth);
+    }
+    .quantity-input:focus {
+        border-color: var(--brand-primary);
+        outline: none;
+    }
+
+    /* Buttons */
+    .remove-btn {
+        background-color: #fef2f2;
+        color: #ef4444;
+        border: 1px solid #fecaca;
+        border-radius: 20px;
+        padding: 8px 16px;
+        font-weight: 600;
+        transition: var(--transition-smooth);
+    }
+    .remove-btn:hover {
+        background-color: #ef4444;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    }
+
+    /* Total Section Modernization */
+    .total-section {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: var(--shadow-soft);
+        padding: 30px;
+        border: 1px solid rgba(255,255,255,0.4);
+        position: -webkit-sticky;
+        position: sticky;
+        top: 120px;
+    }
+    .total-table {
+        width: 100%;
+        margin-bottom: 25px;
+    }
+    .total-table th {
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f3f4f6;
+        color: #6b7280;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+    .total-data td {
+        padding: 15px 0;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: 1.1rem;
+        color: var(--brand-dark);
+    }
+    .total-data:last-child td {
+        border-bottom: none;
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--brand-primary);
+    }
+    
+    .checkout-btn {
+        background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover));
+        color: #fff;
+        border: none;
+        width: 100%;
+        padding: 15px;
+        border-radius: 30px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 15px rgba(242, 129, 35, 0.3);
+        transition: var(--transition-smooth);
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
     .checkout-btn:hover {
-        background-color: #45a049; /* Darker green */
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(242, 129, 35, 0.6);
     }
+    
     .empty-cart-message {
-        font-style: italic;
-        color: #888; /* Empty cart message color */
+        font-size: 1.2rem;
+        color: #6b7280;
+        margin-bottom: 20px;
     }
     .unavailable-message {
+        color: #ef4444;
         font-style: italic;
-        color: #ff0000; /* Unavailable product message color */
+    }
+    
+    .btn-primary.continue-shopping {
+        background: #fff;
+        color: var(--brand-primary);
+        border: 2px solid var(--brand-primary);
+        padding: 12px 25px;
+        border-radius: 30px;
+        font-weight: 600;
+        transition: var(--transition-smooth);
+    }
+    .btn-primary.continue-shopping:hover {
+        background: var(--brand-primary);
+        color: #fff;
+        transform: translateY(-2px);
     }
 </style>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -228,20 +342,34 @@ $(document).ready(function() {
     // CSRF token
     var csrftoken = getCookie('csrftoken');
 
-    // Submit form when quantity changes
-    $('.quantity-input').change(function() {
-        var productId = $(this).data('product-id');
-        var quantity = $(this).val();
-        updateCart(productId, quantity);
+    // Handle Plus Button
+    $('.plus-btn').click(function() {
+        var inputElem = $(this).siblings('.quantity-input');
+        var max = parseInt(inputElem.attr('max'));
+        var val = parseInt(inputElem.val());
+        if (val < max) {
+            inputElem.val(val + 1);
+            updateCart(inputElem.data('product-id'), val + 1, inputElem);
+        }
+    });
+
+    // Handle Minus Button
+    $('.minus-btn').click(function() {
+        var inputElem = $(this).siblings('.quantity-input');
+        var min = parseInt(inputElem.attr('min'));
+        var val = parseInt(inputElem.val());
+        if (val > min) {
+            inputElem.val(val - 1);
+            updateCart(inputElem.data('product-id'), val - 1, inputElem);
+        }
     });
 
     // Function to update cart via AJAX
-    function updateCart(productId, quantity) {
+    function updateCart(productId, quantity, inputElem) {
         $.ajax({
             type: "POST",
             url: "{% url 'cart' %}",
             headers: {
-                // Include the CSRF token in the headers
                 "X-CSRFToken": csrftoken
             },
             data: {
@@ -250,14 +378,16 @@ $(document).ready(function() {
             },
             success: function(response) {
                 if (response.success) {
-                    alert('Cart updated successfully!');
-                    location.reload(); // Reload the page after updating the cart
-                } else {
-                    alert('Failed to update cart.');
+                    // Update subtotal text
+                    inputElem.closest('tr').find('.item-subtotal-display').text('₹' + parseFloat(response.item_subtotal).toFixed(2));
+                    // Update all total cost texts
+                    $('.total-cost').text('Total Cost: ₹' + parseFloat(response.total_cost).toFixed(2));
+                    $('#cart-subtotal').text('₹' + parseFloat(response.total_cost).toFixed(2));
+                    $('#cart-total').text('₹' + parseFloat(response.total_cost).toFixed(2));
                 }
             },
             error: function(xhr, errmsg, err) {
-                console.log(xhr.status + ": " + xhr.responseText); // Log error message
+                console.log(xhr.status + ": " + xhr.responseText); 
             }
         });
     }

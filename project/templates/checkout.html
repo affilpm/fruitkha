@@ -123,14 +123,6 @@
                         <div class="alert alert-danger" role="alert">
                             {{ error_message }}
                         </div>
-                      {% endif %}
-    
-                        {% if messages %}
-                            {% for message in messages %}
-                                <div class="alert alert-danger" role="alert">
-                                    {{ message }}
-                                </div>
-                            {% endfor %}
                         {% endif %}
                         <button class="btn btn-success" type="submit" id="apply-coupon-btn">Apply</button>
                     </form>

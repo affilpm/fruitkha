@@ -25,14 +25,16 @@ def cart(request):
             quantity = form.cleaned_data['quantity']
             cart_item = Cart.objects.filter(user=request.user, product_id=product_id).first()
             if cart_item:
-                old_quantity = cart_item.quantity
                 cart_item.quantity = quantity
-                cart_item.save()
                 cart_item.subtotal = cart_item.product.price * cart_item.quantity
                 cart_item.save()
-                total_cost -= cart_item.product.price * old_quantity
-                total_cost += cart_item.subtotal
-            return JsonResponse({'success': True, 'total_cost': total_cost})
+                
+            # Recalculate total_cost for JSON response
+            total_cost = 0
+            for item in cart_items.exclude(quantity__lte=0):
+                if item.product.stock > 0 and item.product.is_listed:
+                    total_cost += item.product.price * item.quantity
+            return JsonResponse({'success': True, 'total_cost': total_cost, 'item_subtotal': cart_item.subtotal})
         else:
             return JsonResponse({'success': False, 'errors': form.errors})
     else:
@@ -40,12 +42,13 @@ def cart(request):
 
     cart_items = cart_items.exclude(quantity__lte=0)
 
+    has_out_of_stock = False
     for item in cart_items:
         product = item.product
         if product.stock <= 0 or not product.is_listed:
             item.available = False
             item.save()
-            item.delete()
+            has_out_of_stock = True
         else:
             item.available = True
             item.save()
@@ -56,7 +59,7 @@ def cart(request):
             item.original_price_total = original_price * item.quantity  
             total_original_cost += item.original_price_total
     
-    return render(request, 'cart.html', {'cart_items': cart_items, 'form': form, 'total_cost': total_cost})
+    return render(request, 'cart.html', {'cart_items': cart_items, 'form': form, 'total_cost': total_cost, 'has_out_of_stock': has_out_of_stock})
 
 
 

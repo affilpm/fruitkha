@@ -24,7 +24,7 @@
             <div class="container">
                 <div class="search-bar">
 					<form method="get" action="{% url 'shop' %}" class="form-inline justify-content-center">
-                        <input type="text" class="form-control form-control-lg mr-2" name="search_name" placeholder="Search by product name" value="{{ request.GET.search_name }}" style="width: 80%;">
+                        <input type="text" class="form-control form-control-lg mr-2" name="search_name" placeholder="Search by product name" value="{{ search_name|default:'' }}" style="width: 80%;">
                         <button type="submit" class="btn btn-primary btn-lg">Search</button>
                     </form>
                 </div>
@@ -42,7 +42,7 @@
                             <select class="form-control" name="filter_category">
                                 <option value="">All Categories</option>
                                 {% for category in categories %}
-                                <option value="{{ category.name }}" {% if request.GET.filter_category == category.name %}selected{% endif %}>{{ category.name }}</option>
+                                <option value="{{ category.name }}" {% if filter_category == category.name %}selected{% endif %}>{{ category.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -52,10 +52,10 @@
                             <h5>Filter by Price Range</h5>
                             <div class="form-row">
                                 <div class="col">
-                                    <input type="number" class="form-control" name="min_price" placeholder="Min price" value="{{ request.GET.min_price }}">
+                                    <input type="number" class="form-control" name="min_price" placeholder="Min price" value="{{ min_price|default:'' }}">
                                 </div>
                                 <div class="col">
-                                    <input type="number" class="form-control" name="max_price" placeholder="Max price" value="{{ request.GET.max_price }}">
+                                    <input type="number" class="form-control" name="max_price" placeholder="Max price" value="{{ max_price|default:'' }}">
                                 </div>
                             </div>
                         </div>
@@ -65,8 +65,8 @@
                             <h5>Sort by Price</h5>
                             <select class="form-control" name="sort_price">
                                 <option value="">Sort by price</option>
-                                <option value="lowest_to_highest" {% if request.GET.sort_price == 'lowest_to_highest' %}selected{% endif %}>Lowest to Highest</option>
-                                <option value="highest_to_lowest" {% if request.GET.sort_price == 'highest_to_lowest' %}selected{% endif %}>Highest to Lowest</option>
+                                <option value="lowest_to_highest" {% if sort_price == 'lowest_to_highest' %}selected{% endif %}>Lowest to Highest</option>
+                                <option value="highest_to_lowest" {% if sort_price == 'highest_to_lowest' %}selected{% endif %}>Highest to Lowest</option>
                             </select>
                         </div>
 
@@ -84,8 +84,11 @@
                 <div class="row">
                     {% for product in products %}
                     <div class="col-lg-4 col-md-6 mb-4">
-                        <div class="single-product-item text-center">
-                            <div class="product-image">
+                        <div class="single-product-item {% if product.stock <= 0 %}out-of-stock-card{% endif %}">
+                        {% if product.stock <= 0 %}
+                        <div class="out-of-stock-badge">Out of Stock</div>
+                        {% endif %}
+                        <div class="product-image">
                                 <a href="{% url 'single_product' product.id %}">
                                     <img src="{{ product.image1.url }}" alt="{{ product.name }}" width="200" height="200">
                                 </a>
@@ -111,6 +114,7 @@
 <!-- End Product Section -->
 
 <style>
+    /* Sticky Sidebar with Glassmorphism */
     #filter-sidebar {
         position: -webkit-sticky;
         position: sticky;
@@ -119,13 +123,115 @@
         overflow-y: auto;
         padding-right: 15px;
     }
+    
+    .sidebar {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: var(--shadow-soft);
+    }
+    
+    .sidebar h5 {
+        font-weight: 700;
+        margin-bottom: 15px;
+        color: var(--brand-dark);
+        font-size: 1.1rem;
+    }
+    
+    .sidebar .form-control {
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        padding: 10px 15px;
+        transition: var(--transition-smooth);
+        height: auto; /* Fix for select clipping */
+        min-height: 45px; /* Ensure enough height for text */
+    }
+    
+    .sidebar select.form-control {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath fill='none' d='M0 0h24v24H0z'/%3E%3Cpath d='M12 15.398L6.602 10h10.796z' fill='rgba(0,0,0,0.5)'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 20px;
+        padding-right: 35px;
+    }
+    
+    .sidebar .form-control:focus {
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 3px rgba(242, 129, 35, 0.2);
+        outline: none;
+    }
 
     #product-listings {
         padding-top: 20px;
     }
 
+    /* Product Cards Styling (Reusing styles from Home for consistency) */
     .single-product-item {
-        margin-bottom: 20px;
+        background: #fff;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: var(--shadow-soft);
+        transition: var(--transition-smooth);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.03);
+        margin-bottom: 30px;
+    }
+    .single-product-item:hover {
+        transform: translateY(-10px);
+        box-shadow: var(--shadow-hover);
+    }
+    .single-product-item .product-image img {
+        border-radius: 12px;
+        transition: transform 0.5s ease;
+        object-fit: cover;
+    }
+    .single-product-item:hover .product-image img {
+        transform: scale(1.05);
+    }
+    .single-product-item h3 {
+        font-weight: 700;
+        margin-top: 20px;
+        font-size: 1.25rem;
+        color: var(--brand-dark);
+    }
+    .single-product-item .product-price {
+        font-size: 1.15rem;
+        color: var(--brand-primary);
+        font-weight: 800;
+        margin-bottom: 0;
+    }
+    .single-product-item .product-price span {
+        display: block;
+        font-size: 0.85rem;
+        color: #9ca3af;
+        font-weight: 500;
+        margin-bottom: 5px;
+    }
+
+    /* Out of stock styling */
+    .single-product-item.out-of-stock-card {
+        opacity: 0.6;
+        filter: grayscale(100%);
+    }
+    .out-of-stock-badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: #ef4444;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        z-index: 10;
+        font-size: 0.85rem;
+        box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
     }
 
     /* Responsive Design */
@@ -135,27 +241,52 @@
             height: auto;
             overflow-y: visible;
             padding-right: 0;
-            margin-bottom: 110px; /* Add space below sidebar on smaller screens */
+            margin-bottom: 30px; 
         }
-        
         #product-listings {
             margin-top: 20px;
         }
     }
 
-    /* Adjustments for search bar */
+    /* Modern Search Bar */
     .search-bar {
-        text-align: center; /* Center align the form elements */
+        text-align: center;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: var(--shadow-soft);
+        backdrop-filter: blur(10px);
     }
 
     .form-control-lg {
-        width: 70%; /* Adjust width of the search input */
-        max-width: 400px; /* Set maximum width */
-        font-size: 1.2rem; /* Increase font size */
+        width: 70%;
+        max-width: 500px;
+        font-size: 1.1rem;
+        border-radius: 30px;
+        padding: 15px 25px;
+        border: 2px solid #e5e7eb;
+        transition: var(--transition-smooth);
+    }
+    .form-control-lg:focus {
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 4px rgba(242, 129, 35, 0.2);
     }
 
     .btn-lg {
-        font-size: 1.2rem; /* Increase font size of the button */
+        font-size: 1.1rem;
+        border-radius: 30px;
+        padding: 15px 35px;
+        background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover));
+        border: none;
+        box-shadow: 0 4px 15px rgba(242, 129, 35, 0.4);
+        transition: var(--transition-smooth);
+        font-weight: 600;
+        color: white;
+    }
+    .btn-lg:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(242, 129, 35, 0.6);
+        color: white;
     }
 </style>
 

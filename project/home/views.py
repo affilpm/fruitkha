@@ -43,7 +43,7 @@ def home(request):
     
     products = Product.objects.all()
     categories = Category.objects.all()
-    products = Product.objects.filter(stock__gt=0)[:6]
+    products = Product.objects.filter(is_listed=True)[:6]
     
     context = {
         'products': products,
@@ -78,7 +78,16 @@ def shop(request):
     elif sort_price == 'highest_to_lowest':
         products = products.order_by('-price')
 
-    return render(request, 'shop.html', {'products': products, 'categories': categories})
+    context = {
+        'products': products,
+        'categories': categories,
+        'search_name': search_name,
+        'filter_category': filter_category,
+        'sort_price': sort_price,
+        'min_price': min_price,
+        'max_price': max_price
+    }
+    return render(request, 'shop.html', context)
 
 
  

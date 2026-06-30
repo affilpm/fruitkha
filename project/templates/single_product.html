@@ -178,149 +178,172 @@
 
 	
 <style>
-    /* Set a specific height for the carousel */
-    #productCarousel .carousel-inner {
-        height: 400px; /* Adjust the height as needed */
+    /* Modern Product Carousel */
+    #productCarousel {
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: var(--shadow-soft);
+        background: #fff;
     }
-    
-    /* Set the dimensions of the images */
+    #productCarousel .carousel-inner {
+        height: 500px; 
+    }
     #productCarousel .carousel-item {
         position: relative;
+        height: 100%;
     }
-    
     #productCarousel .carousel-item img {
         width: 100%;
-        height: 100%; /* This will maintain the aspect ratio */
-        object-fit: cover; /* Ensures the image covers the entire container */
-        border-radius: 10px; /* Add rounded corners to the image */
+        height: 100%; 
+        object-fit: cover; 
+        transition: transform 0.5s ease;
     }
-    
-    /* Add shadow effect */
+    #productCarousel:hover .carousel-item img {
+        transform: scale(1.02);
+    }
+    /* Modernized shadow overlay */
     #productCarousel .carousel-item::before {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(0, 0, 0, 0.2); /* Adjust the opacity of the shadow */
-        border-radius: 10px; /* Same as the image's border-radius */
-        z-index: 1; /* Ensure the shadow is behind the image */
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow effect */
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.15) 100%);
+        z-index: 1;
+        pointer-events: none;
     }
 
-    /* Cart Button */
-    .cart-btn {
-        padding: 12px 24px; /* Adjusted padding for larger size */
-        font-size: 18px; /* Adjusted font size for larger text */
-        border: none;
-        background: none;
-        color: inherit;
-        text-decoration: underline;
-        font: inherit;
-        cursor: pointer;
-        border-radius: 30px; 
+    /* Product Content Styling */
+    .single-product-content {
+        background: #fff;
+        padding: 40px;
+        border-radius: 24px;
+        box-shadow: var(--shadow-soft);
+        border: 1px solid rgba(0,0,0,0.02);
+        height: 100%;
+    }
+    .single-product-content h2 {
+        font-weight: 800;
+        color: var(--brand-dark);
+        margin-bottom: 20px;
+        font-size: 2.2rem;
+    }
+    .single-product-pricing {
+        font-size: 1.8rem;
+        color: var(--brand-primary);
+        font-weight: 800;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .single-product-pricing span {
+        font-size: 1rem;
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .single-product-pricing del {
+        color: #9ca3af;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+    .product-description {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: #4b5563;
+        margin-bottom: 30px;
     }
 
-    /* Optional: Increase icon size */
-    .cart-btn .fas {
-        font-size: 30px; /* Adjusted icon size */
-    }
-
-    /* Action Buttons */
+    /* Modern Buttons */
     .action-buttons {
-        margin-top: 10px; /* Adjust margin as needed */
+        margin-top: 30px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
     }
     
-    .action-buttons form,
-    .action-buttons a {
-        display: inline-block;
-        margin-right: 10px; /* Adjust margin between buttons as needed */
-    }
-
-    /* Button Styling */
     .btn {
-        padding: 10px 20px;
-        font-size: 16px;
-        border-radius: 5px;
+        padding: 15px 30px;
+        font-size: 1.05rem;
+        font-weight: 600;
+        border-radius: 30px;
         cursor: pointer;
-        transition: background-color 0.3s, color 0.3s; /* Smooth transition effect */
-        border-radius: 30px; 
+        transition: var(--transition-smooth);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border: none;
     }
     
-    /* Primary Button */
     .btn-primary {
-        background-color: #007bff;
-        border: none;
+        background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover));
         color: #fff;
+        box-shadow: 0 4px 15px rgba(242, 129, 35, 0.3);
     }
     
     .btn-primary:hover {
-        background-color: #0056b3;
-    }
-    
-    /* Secondary Button */
-    .btn-secondary {
-        background-color: #6c757d;
-        border: none;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(242, 129, 35, 0.5);
         color: #fff;
     }
     
-    .btn-secondary:hover {
-        background-color: #5a6268;
+    .btn-outline-danger {
+        color: #ef4444;
+        background: #fef2f2;
+        border: 2px solid #fecaca;
     }
     
-    /* Outline Primary Button */
-    .btn-outline-primary {
-        color: #007bff;
-        border: 2px solid #007bff;
-        background-color: transparent;
-    }
-    
-    .btn-outline-primary:hover {
-        background-color: #007bff;
+    .btn-outline-danger:hover {
+        background: #ef4444;
         color: #fff;
+        border-color: #ef4444;
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+        transform: translateY(-2px);
     }
-    
-    /* Wishlist Button */
-    .wishlist-btn {
-        padding: 10px 20px;
-        font-size: 16px;
-        border-radius: 5px;
-        transition: background-color 0.3s, color 0.3s; /* Smooth transition effect */
+
+    /* Related Products Grid - Reusing Modern Product Card Styles */
+    .single-product-item {
+        background: #fff;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: var(--shadow-soft);
+        transition: var(--transition-smooth);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.03);
+        margin-bottom: 30px;
     }
-    
-    .wishlist-btn i {
-        margin-right: 5px;
+    .single-product-item:hover {
+        transform: translateY(-10px);
+        box-shadow: var(--shadow-hover);
     }
-    
-    /* Add to Wishlist Button */
-    .wishlist-btn-add {
-        background-color: #28a745;
-        border: none;
-        color: #fff;
+    .single-product-item .product-image img {
+        border-radius: 12px;
+        transition: transform 0.5s ease;
+        object-fit: cover;
     }
-    
-    .wishlist-btn-add:hover {
-        background-color: #218838;
+    .single-product-item:hover .product-image img {
+        transform: scale(1.05);
     }
-    
-    /* Remove from Wishlist Button */
-    .wishlist-btn-remove {
-        background-color: #dc3545;
-        border: none;
-        color: #fff;
+    .single-product-item h3 {
+        font-weight: 700;
+        margin-top: 20px;
+        font-size: 1.25rem;
+        color: var(--brand-dark);
     }
-    
-    .wishlist-btn-remove:hover {
-        background-color: #c82333;
+    .single-product-item .product-price {
+        font-size: 1.15rem;
+        color: var(--brand-primary);
+        font-weight: 800;
+        margin-bottom: 0;
     }
-    
-    /* Added to Cart Button */
-    .added-to-cart-btn {
-        background-color: #28a745;
-        border: none;
-        color: #fff;
+    .single-product-item .product-price span {
+        display: block;
+        font-size: 0.85rem;
+        color: #9ca3af;
+        font-weight: 500;
+        margin-bottom: 5px;
     }
 </style>
 
