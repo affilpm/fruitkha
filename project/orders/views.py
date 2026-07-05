@@ -8,7 +8,7 @@ from .models import Order, OrderItem, Coupon, Wallet, CancellationRequest, Razor
 from home.models import Address, Product
 from django.db import transaction
 from django.views.decorators.cache import never_cache
-from django.db.models import F
+from django.db.models import F, Sum
 from home.forms import AddressForm
 from .forms import CouponApplyForm, CancellationRequestForm
 from django.utils import timezone
@@ -18,6 +18,7 @@ from decimal import Decimal
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 import razorpay # type: ignore
+from django.core.paginator import Paginator
 
 
 def is_not_superuser(user):
@@ -35,15 +36,25 @@ def orders(request):
 @never_cache
 def order_detail(request, order_id):
     order = get_object_or_404(Order.objects.select_related('user', 'shipping_address').prefetch_related('items__product'), pk=order_id)
-    transaction = Transaction.objects.filter(order=order).first()
-    transaction_amount = transaction.amount if transaction else None
+    refund_amount = Transaction.objects.filter(order=order, transaction_type='Refund').aggregate(total=Sum('amount'))['total']
+    cancellation_amount = Transaction.objects.filter(order=order, transaction_type='Cancellation').aggregate(total=Sum('amount'))['total']
+    
+    transaction_amount = refund_amount if refund_amount else None
+    cancellation_transaction_amount = cancellation_amount if cancellation_amount else None
+    
     form = CancellationRequestForm()
-    razorpay_order = order.razorpay_order
-    is_paid = razorpay_order.paid if razorpay_order else False
     
+    # Determine payment status
+    if order.payment_method.lower() == 'wallet':
+        is_paid = True
+    elif order.payment_method.lower() in ['cash_on_delivery', 'cod']:
+        is_paid = any(item.status == 'Delivered' for item in order.items.all()) or (transaction_amount is not None)
+    else:
+        razorpay_order = order.razorpay_order
+        is_paid = razorpay_order.paid if razorpay_order else False
     
-    return render(request, 'order_detail.html', {'order': order,  'transaction_amount': transaction_amount, 'form': form, 'is_paid': is_paid, 
-})
+    return render(request, 'order_detail.html', {'order': order,  'transaction_amount': transaction_amount, 'cancellation_transaction_amount': cancellation_transaction_amount, 'form': form, 'is_paid': is_paid, 
+                                                 'order_items': order.items.all()})
 
 
 
@@ -135,6 +146,19 @@ def apply_coupon(request):
     return redirect('checkout')
 
 
+@user_passes_test(lambda u: not u.is_superuser, login_url='user_login')
+def remove_wallet(request):
+    if 'use_wallet' in request.session:
+        del request.session['use_wallet']
+    return redirect('checkout')
+
+
+@user_passes_test(lambda u: not u.is_superuser, login_url='user_login')
+def apply_wallet(request):
+    if request.method == 'POST':
+        request.session['use_wallet'] = True
+    return redirect('checkout')
+
 @never_cache
 @user_passes_test(is_not_superuser, login_url='user_login')
 def add_address_checkout(request):
@@ -193,6 +217,18 @@ def checkout(request):
 
     shipping_addresses = request.user.address_set.all()
     
+    wallet, created = Wallet.objects.get_or_create(user=request.user, defaults={'balance': 0})
+
+    use_wallet = request.session.get('use_wallet', False)
+    wallet_discount = Decimal(0)
+    
+    if use_wallet:
+        if wallet.balance > 0:
+            wallet_discount = min(wallet.balance, total_cost)
+            total_cost -= wallet_discount
+        else:
+            request.session.pop('use_wallet', None)
+            use_wallet = False
 
     return render(request, 'checkout.html', {
         'cart_items': cart_items,
@@ -203,6 +239,9 @@ def checkout(request):
         'discount_amount': discount_amount,
         'form': CouponApplyForm(),
         'error_message': error_message,  
+        'wallet': wallet,
+        'use_wallet': use_wallet,
+        'wallet_discount': wallet_discount,
     })
 
 
@@ -212,7 +251,7 @@ def place_order(request):
     if request.method == 'POST':
         payment_method = request.POST.get('payment-method')
         
-        if payment_method == 'cash_on_delivery':
+        if payment_method in ['cash_on_delivery', 'wallet']:
             return save_order(request)
         else:
             return redirect('checkout')
@@ -249,6 +288,20 @@ def razorpay_view(request):
             subtotal += product_price * cart_item.quantity
 
         total_cost = subtotal - discount_amount
+        
+        use_wallet = request.session.get('use_wallet', False)
+        wallet_discount = Decimal('0.00')
+        if use_wallet:
+            try:
+                wallet = Wallet.objects.get(user=request.user)
+                if wallet.balance > 0:
+                    wallet_discount = min(wallet.balance, total_cost)
+                    total_cost -= wallet_discount
+            except Wallet.DoesNotExist:
+                pass
+                
+        if total_cost <= 0:
+            return redirect('checkout')
         
         client = razorpay.Client(auth=(settings.RAZOR_KEY_ID, settings.RAZOR_KEY_SECRET))
 
@@ -300,13 +353,14 @@ def success(request):
                     
                 # Refund to Wallet
                 wallet, _ = Wallet.objects.get_or_create(user=order.user)
-                wallet.balance += order.total_cost
+                refund_amount = order.total_cost + order.wallet_discount
+                wallet.balance += refund_amount
                 wallet.save()
                 
                 # Record transaction
                 Transaction.objects.create(
                     user=order.user,
-                    amount=order.total_cost,
+                    amount=refund_amount,
                     transaction_type='Refund',
                     order=order
                 )
@@ -365,6 +419,20 @@ def save_order(request):
                 original_total += cart_item.product.original_price * cart_item.quantity if cart_item.product.original_price is not None else Decimal('0.00')
 
             total_cost = subtotal - discount_amount
+            
+            use_wallet = request.session.get('use_wallet', False)
+            wallet_discount = Decimal('0.00')
+            wallet_instance = None
+            if use_wallet:
+                try:
+                    wallet_instance = Wallet.objects.get(user=request.user)
+                    if wallet_instance.balance > 0:
+                        wallet_discount = min(wallet_instance.balance, total_cost)
+                        total_cost -= wallet_discount
+                except Wallet.DoesNotExist:
+                    pass
+            
+            payment_method = request.POST.get('payment-method')
 
             order_address = Order_Address.objects.create(
                 user=request.user,
@@ -377,9 +445,8 @@ def save_order(request):
                 name=address.name,
             )
 
-            payment_method = request.POST.get('payment-method')
             razorpay_order = None
-            if payment_method != 'cod':
+            if payment_method not in ['cod', 'cash_on_delivery', 'wallet']:
                 razorpay_order_id = request.session.get('razorpay_order_id')
                 if razorpay_order_id:
                     razorpay_order = Razorpay_Order.objects.filter(payment_id=razorpay_order_id).first()
@@ -393,10 +460,21 @@ def save_order(request):
                 total_products=len(cart_items),
                 subtotal=subtotal,
                 original_total=original_total,
+                wallet_discount=wallet_discount,
                 coupon=coupon,
                 shipping_address=order_address,
-                razorpay_order=razorpay_order if payment_method != 'cod' else None
+                razorpay_order=razorpay_order if payment_method not in ['cod', 'cash_on_delivery', 'wallet'] else None
             )
+
+            if wallet_discount > 0 and wallet_instance:
+                wallet_instance.balance -= wallet_discount
+                wallet_instance.save()
+                Transaction.objects.create(
+                    user=request.user,
+                    amount=wallet_discount,
+                    transaction_type='Purchase (Wallet)',
+                    order=order
+                )
 
             for cart_item in cart_items:
                 product_price = cart_item.product.price if cart_item.product.price is not None else Decimal('0.00')
@@ -409,14 +487,16 @@ def save_order(request):
                     offer=cart_item.product.offer
                 )
                 
-                if payment_method == 'cash_on_delivery':
+                if payment_method in ['cash_on_delivery', 'wallet']:
                     cart_item.product.stock -= cart_item.quantity
                     cart_item.product.save()
 
             cart_items.delete()
             if 'coupon_id' in request.session:
                 del request.session['coupon_id']
-            if 'razorpay_order_id' in request.session and payment_method != 'cod':
+            if 'use_wallet' in request.session:
+                del request.session['use_wallet']
+            if 'razorpay_order_id' in request.session and payment_method not in ['cod', 'cash_on_delivery', 'wallet']:
                 del request.session['razorpay_order_id']
 
             return redirect('order_success')
@@ -437,4 +517,10 @@ def wallet(request):
         wallet = Wallet.objects.get(user=request.user)
     except Wallet.DoesNotExist:
         wallet = Wallet.objects.create(user=request.user, balance=0)
-    return render(request, 'wallet.html', {'wallet': wallet})
+        
+    transactions_list = Transaction.objects.filter(user=request.user).order_by('-id')
+    paginator = Paginator(transactions_list, 5)  # Show 5 transactions per page
+    page_number = request.GET.get('page')
+    transactions = paginator.get_page(page_number)
+    
+    return render(request, 'wallet.html', {'wallet': wallet, 'transactions': transactions})

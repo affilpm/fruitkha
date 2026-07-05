@@ -111,22 +111,22 @@
                                 <span class="col-6">Invoice Date</span>
                                 <span class="col-6 text-end">{{ order.order_date }}</span>
                                 <span class="col-6">Payment method</span>
-                                <span class="col-6  text-end">{{ order.payment_method }}</span>
+                                <span class="col-6  text-end">{{ order.get_payment_method_display }}</span>
                                 <span class="col-6 ">
                                     
                                     Payment status
                                 </span>
                                 <span class="col-6 text-end"> 
                                 {% if order.payment_method|lower == 'cash_on_delivery' %}
-                                {% if item.status == 'Delivered' %}
-                                    Paid
-                                {% else %}
                                     Pending
-                                {% endif %}
                                 {% endif %}
 
                                 {% if order.payment_method|lower == 'razorpay' %}
                                     {% if is_paid %}Paid{% else %}Not paid{% endif %}
+                                {% endif %}
+
+                                {% if order.payment_method|lower == 'wallet' %}
+                                    Paid
                                 {% endif %}
                                 </span>
                             </div>
@@ -173,14 +173,21 @@
                                                 {% if order.coupon %}
                                                     -₹{{ order.coupon.discount_amount }}
                                                 {% else %}
-                                                    $0.00
+                                                    ₹0.00
                                                 {% endif %}
                                             </td>
                                         </tr>
+                                        {% if order.wallet_discount > 0 %}
+                                        <tr class="discount-row">
+                                            <td colspan="3" class="text-end">Wallet Applied:</td>
+                                            <td></td>
+                                            <td class="text-end">-₹{{ order.wallet_discount }}</td>
+                                        </tr>
+                                        {% endif %}
                                         <tr class="total-row">
                                             <td colspan="3" class="text-uppercase text-end">Total:</td>
                                             <td></td>
-                                            <td class="text-end">${{ order.total_cost }}</td>
+                                            <td class="text-end">₹{{ order.total_cost }}</td>
                                         </tr>
                                     </tbody>
                                 </table>

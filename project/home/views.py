@@ -200,7 +200,10 @@ def user_profile(request):
         wallet = Wallet.objects.get(user=request.user)
     except Wallet.DoesNotExist:
         wallet = Wallet.objects.create(user=request.user, balance=0)
-    return render(request, 'user_profile.html', {'user': user, 'wallet':wallet})
+        
+    transactions = Transaction.objects.filter(user=request.user).order_by('-id')
+    
+    return render(request, 'user_profile.html', {'user': user, 'wallet':wallet, 'transactions': transactions})
 
 
 
@@ -859,19 +862,31 @@ def admin_change_order_status(request, item_id):
         new_status = request.POST.get('status')
         if new_status in dict(item.ORDER_STATUS_CHOICES):
             if new_status == 'Cancelled' and item.status != 'Cancelled':
+                previous_status = item.status
                 item.status = 'Cancelled'
                 item.save()
+                # Calculate refund amount based on prepaid money + cash (if delivered and returned/cancelled)
+                is_total_cost_paid = False
+                if item.order.payment_method.lower() in ['razorpay', 'wallet']:
+                    is_total_cost_paid = True
+                elif item.order.payment_method.lower() == 'cash_on_delivery' and previous_status == 'Delivered':
+                    is_total_cost_paid = True
                 
-                if item.order.payment_method.lower() == 'razorpay':
+                refund_base = item.order.wallet_discount if hasattr(item.order, 'wallet_discount') else Decimal('0.00')
+                if is_total_cost_paid:
+                    refund_base += item.order.total_cost
+                
+                if refund_base > 0 and item.order.subtotal > 0:
+                    refund_amount = (item.total_price / item.order.subtotal) * refund_base
                     try:
                         user_wallet, created = Wallet.objects.get_or_create(user=item.order.user)
-                        user_wallet.balance += item.total_price
+                        user_wallet.balance += refund_amount
                         user_wallet.save()
                         
                         Transaction.objects.create(
                             user=item.order.user,
-                            amount=item.total_price,
-                            transaction_type='Refund',
+                            amount=refund_amount,
+                            transaction_type='Refund' if previous_status == 'Delivered' else 'Cancellation',
                             order=item.order
                         )
                     except Exception as e:
@@ -905,19 +920,31 @@ def approve_cancellation_request(request, request_id):
         
         order_item = cancellation_request.order_item
         if order_item.status != 'Cancelled':
+            previous_status = order_item.status
             order_item.status = 'Cancelled'
             order_item.save()
             
-            if order_item.order.payment_method.lower() == 'razorpay':
+            is_total_cost_paid = False
+            if order_item.order.payment_method.lower() in ['razorpay', 'wallet']:
+                is_total_cost_paid = True
+            elif order_item.order.payment_method.lower() == 'cash_on_delivery' and previous_status == 'Delivered':
+                is_total_cost_paid = True
+                
+            refund_base = order_item.order.wallet_discount if hasattr(order_item.order, 'wallet_discount') else Decimal('0.00')
+            if is_total_cost_paid:
+                refund_base += order_item.order.total_cost
+                
+            if refund_base > 0 and order_item.order.subtotal > 0:
+                refund_amount = (order_item.total_price / order_item.order.subtotal) * refund_base
                 try:
                     user_wallet, created = Wallet.objects.get_or_create(user=order_item.order.user)
-                    user_wallet.balance += order_item.total_price
+                    user_wallet.balance += refund_amount
                     user_wallet.save()
                     Transaction.objects.create(
                         user=order_item.order.user,
-                        amount=order_item.total_price,
-                        transaction_type='Refund',
-                        order_id=order_item.order.id
+                        amount=refund_amount,
+                        transaction_type='Refund' if previous_status == 'Delivered' else 'Cancellation',
+                        order=order_item.order
                     )
                 except Wallet.DoesNotExist:
                     pass

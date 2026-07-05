@@ -98,6 +98,12 @@
                                 <td id="coupon-discount">{{ coupon.code }} - Discount: ₹{{ discount_amount }}</td>
                             </tr>
                             {% endif %}
+                            {% if use_wallet %}
+                            <tr id="wallet-discount-row">
+                                <td class="text-success">Wallet Applied:</td>
+                                <td id="wallet-discount" class="text-success">- ₹{{ wallet_discount }}</td>
+                            </tr>
+                            {% endif %}
                             <tr class="font-weight-bold">
                                 <td>Total:</td>
                                 <td id="total-cost">₹{{ total_cost }}</td>
@@ -138,6 +144,27 @@
                 </div>
             </div>
             
+            <!-- Wallet Box Section -->
+            <div class="card mb-4" id="wallet-card">
+                <div class="card-header bg-primary text-white">
+                    Apply Wallet Balance
+                </div>
+                <div class="card-body">
+                    <p>Current Balance: <strong>₹{{ wallet.balance }}</strong></p>
+                    {% if not use_wallet %}
+                    <form method="POST" action="{% url 'apply_wallet' %}">
+                        {% csrf_token %}
+                        <button class="btn btn-success" type="submit" {% if wallet.balance <= 0 %}disabled{% endif %}>Use Wallet Balance</button>
+                    </form>
+                    {% else %}
+                    <form method="POST" action="{% url 'remove_wallet' %}">
+                        {% csrf_token %}
+                        <button class="btn btn-danger mt-2" type="submit">Remove Wallet</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            
             
 <!-- Payment Method Section -->
 <div class="card">
@@ -148,12 +175,17 @@
         <!-- Checkout Form -->
         <form id="checkout-form" method="POST" action="{% url 'place_order' %}">
             {% csrf_token %}
-            <div class="form-group" id="cod-option">
-                <label><input type="radio" name="payment-method" value="cash_on_delivery" checked> Cash on Delivery</label>
-            </div>
-            <div class="form-group" id="razorpay-option">
-                <label><input type="radio" name="payment-method" value="razorpay"> Razorpay</label>
-            </div>
+            {% if total_cost == 0 %}
+                <input type="hidden" name="payment-method" value="wallet">
+                <p class="text-success font-weight-bold">Amount is fully covered by your wallet balance.</p>
+            {% else %}
+                <div class="form-group" id="cod-option">
+                    <label><input type="radio" name="payment-method" value="cash_on_delivery" checked> Cash on Delivery</label>
+                </div>
+                <div class="form-group" id="razorpay-option">
+                    <label><input type="radio" name="payment-method" value="razorpay"> Razorpay</label>
+                </div>
+            {% endif %}
             <!-- Add hidden input for selected address ID -->
             <input type="hidden" name="selected-address" id="selected-address">
             <!-- Other form fields -->
@@ -190,17 +222,44 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Update hidden input with selected address ID
-        document.getElementById("shipping-address").addEventListener("change", function() {
+        var addressSelect = document.getElementById("shipping-address");
+        var selectedAddressInput = document.getElementById("selected-address");
+        
+        // Restore selected address from localStorage if it exists
+        var savedAddress = sessionStorage.getItem("selectedShippingAddress");
+        if (savedAddress) {
+            for (var i = 0; i < addressSelect.options.length; i++) {
+                if (addressSelect.options[i].value === savedAddress) {
+                    addressSelect.value = savedAddress;
+                    selectedAddressInput.value = savedAddress;
+                    break;
+                }
+            }
+        }
+
+        // Update hidden input with selected address ID and save to sessionStorage
+        addressSelect.addEventListener("change", function() {
             var selectedAddress = this.value;
-            document.getElementById("selected-address").value = selectedAddress;
+            selectedAddressInput.value = selectedAddress;
+            sessionStorage.setItem("selectedShippingAddress", selectedAddress);
         });
 
         // Validate address selection before form submission
         document.getElementById("place-order-btn").addEventListener("click", function(event) {
             var selectedAddress = document.getElementById("selected-address").value;
             var totalCost = {{ total_cost|floatformat:2 }}; // Assuming total_cost is passed from Django view
-            var paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
+            
+            var paymentMethod = "wallet";
+            var paymentInput = document.querySelector('input[name="payment-method"]:checked');
+            if (paymentInput) {
+                paymentMethod = paymentInput.value;
+            } else {
+                var hiddenPaymentInput = document.querySelector('input[name="payment-method"][type="hidden"]');
+                if (hiddenPaymentInput) {
+                    paymentMethod = hiddenPaymentInput.value;
+                }
+            }
+            
             var form = document.getElementById("checkout-form");
 
             if (selectedAddress === "") {
@@ -213,11 +272,13 @@
                 // Proceed with form submission
                 if (paymentMethod === "cash_on_delivery" && totalCost > 1000) {
                     // Disable cash on delivery option if total cost is less than 1000
-                    document.getElementById("cod-option").style.display = "none";
+                    if (document.getElementById("cod-option")) {
+                        document.getElementById("cod-option").style.display = "none";
+                    }
                     // Redirect to checkout page to select another payment method
                     window.location.href = "{% url 'checkout' %}";
                 } else {
-                    if (paymentMethod === "cash_on_delivery") {
+                    if (paymentMethod === "cash_on_delivery" || paymentMethod === "wallet") {
                         form.action = "{% url 'place_order' %}";
                     } else if (paymentMethod === "razorpay") {
                         form.action = "{% url 'razorpay' %}";

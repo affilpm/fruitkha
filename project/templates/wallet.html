@@ -113,6 +113,103 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Transaction History -->
+                <div class="account-card mt-4">
+                    <div class="account-card-header">
+                        <div class="account-card-header-icon" style="background: #eef2ff; color: #4361ee;">
+                            <i class="fas fa-list-alt"></i>
+                        </div>
+                        <div>
+                            <h4>Transaction History</h4>
+                            <p>Recent wallet activity</p>
+                        </div>
+                    </div>
+                    <div class="account-card-body" style="padding: 0;">
+                        <div class="table-responsive">
+                            <table class="account-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Source/Order</th>
+                                        <th class="text-end">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for tx in transactions %}
+                                    <tr>
+                                        <td>{{ tx.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            {% if 'Refund' in tx.transaction_type or 'Cancellation' in tx.transaction_type %}
+                                                <span class="account-badge badge-success"><i class="fas fa-arrow-down"></i> Received</span>
+                                            {% else %}
+                                                <span class="account-badge badge-danger"><i class="fas fa-arrow-up"></i> Spent</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if 'Refund' in tx.transaction_type %}
+                                                Refund for Order #{{ tx.order.id }}
+                                            {% elif 'Cancellation' in tx.transaction_type %}
+                                                Cancelled Order #{{ tx.order.id }}
+                                            {% else %}
+                                                Payment for Order #{{ tx.order.id }}
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end" style="font-weight: 700; {% if 'Refund' in tx.transaction_type or 'Cancellation' in tx.transaction_type %}color: #28a745;{% else %}color: #dc3545;{% endif %}">
+                                            {% if 'Refund' in tx.transaction_type or 'Cancellation' in tx.transaction_type %}+{% else %}-{% endif %}₹{{ tx.amount }}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4">No transactions found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        {% if transactions.has_other_pages %}
+                        <div class="pagination-container py-3 d-flex justify-content-center border-top">
+                            <nav aria-label="Transaction pagination">
+                                <ul class="pagination mb-0" style="gap: 5px;">
+                                    {% if transactions.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ transactions.previous_page_number }}" style="border-radius: 8px; color: var(--brand-primary); border: 1px solid #e5e7eb;">&laquo;</a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link" style="border-radius: 8px; color: #9ca3af; border: 1px solid #e5e7eb; background: #f9fafb;">&laquo;</span>
+                                    </li>
+                                    {% endif %}
+                                    
+                                    {% for i in transactions.paginator.page_range %}
+                                        {% if transactions.number == i %}
+                                        <li class="page-item active">
+                                            <span class="page-link" style="border-radius: 8px; background-color: var(--brand-primary); border-color: var(--brand-primary); color: white;">{{ i }}</span>
+                                        </li>
+                                        {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ i }}" style="border-radius: 8px; color: var(--brand-primary); border: 1px solid #e5e7eb;">{{ i }}</a>
+                                        </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if transactions.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ transactions.next_page_number }}" style="border-radius: 8px; color: var(--brand-primary); border: 1px solid #e5e7eb;">&raquo;</a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link" style="border-radius: 8px; color: #9ca3af; border: 1px solid #e5e7eb; background: #f9fafb;">&raquo;</span>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>

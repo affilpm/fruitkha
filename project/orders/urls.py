@@ -18,9 +18,8 @@ urlpatterns = [
     
     path('apply-coupon/', views.apply_coupon, name='apply_coupon'),
     path('remove-coupon/', views.remove_coupon, name='remove_coupon'),
-    
-    
-    
+    path('apply-wallet/', views.apply_wallet, name='apply_wallet'),
+    path('remove-wallet/', views.remove_wallet, name='remove_wallet'),
     path('wallet/', views.wallet, name='wallet'),
     path('save-order/', views.save_order, name='save_order'),
     

@@ -27,12 +27,14 @@ class Order(models.Model):
     PAYMENT_CHOICES = (
         ('cash_on_delivery', 'Cash on Delivery'),
         ('razorpay', 'razorpay'),
+        ('wallet', 'Wallet'),
     )
     payment_method = models.CharField(max_length=100, choices=PAYMENT_CHOICES)
     order_date = models.DateTimeField(auto_now_add=True)
     total_products = models.PositiveIntegerField(default=0)
     original_total = models.DecimalField(max_digits=10, decimal_places=2)  
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+    wallet_discount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     razorpay_order = models.OneToOneField('Razorpay_Order', on_delete=models.SET_NULL, null=True, blank=True)
 
 
@@ -89,7 +91,8 @@ class Transaction(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     transaction_type = models.CharField(max_length=20) 
-    order = models.ForeignKey(Order, on_delete=models.CASCADE) 
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
     
     
     

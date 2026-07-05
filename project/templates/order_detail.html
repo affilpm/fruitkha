@@ -69,19 +69,32 @@
                                 </div>
                             </li>
                             {% endif %}
+                            {% if order.wallet_discount > 0 %}
+                            <li class="account-info-item">
+                                <div class="account-info-label">
+                                    <span class="label-text">Wallet Discount</span>
+                                    <span class="label-value" style="color: #28a745;">-₹{{ order.wallet_discount }}</span>
+                                </div>
+                            </li>
+                            {% endif %}
                             <li class="account-info-item highlight-row">
                                 <div class="account-info-label">
-                                    <span class="label-text" style="font-weight: 700;">Total Paid</span>
+                                    <span class="label-text" style="font-weight: 700;">
+                                        {% if not is_paid and order.payment_method.lower == 'cash_on_delivery' %}
+                                            Amount to Pay
+                                        {% else %}
+                                            Total Paid
+                                        {% endif %}
+                                    </span>
                                     <span class="label-value" style="font-size: 1.3rem; font-weight: 700; color: #007bff;">₹{{ order.total_cost }}</span>
                                 </div>
                             </li>
                             <li class="account-info-item">
                                 <div class="account-info-label">
                                     <span class="label-text">Payment Method</span>
-                                    <span class="label-value">{{ order.payment_method }}</span>
+                                    <span class="label-value">{{ order.get_payment_method_display }}</span>
                                 </div>
                             </li>
-                            {% if order.payment_method.lower == 'razorpay' %}
                             <li class="account-info-item">
                                 <div class="account-info-label">
                                     <span class="label-text">Payment Status</span>
@@ -89,17 +102,22 @@
                                         {% if is_paid %}
                                             <span class="account-badge badge-success"><i class="fas fa-check-circle"></i> Paid</span>
                                         {% else %}
-                                            <span class="account-badge badge-danger"><i class="fas fa-times-circle"></i> Not Paid</span>
+                                            <span class="account-badge badge-danger"><i class="fas fa-clock"></i> To Pay</span>
                                         {% endif %}
                                     </span>
                                 </div>
                             </li>
-                            {% endif %}
                         </ul>
                         {% if transaction_amount %}
                         <div class="refund-notice">
                             <i class="fas fa-check-circle"></i>
-                            <span><strong>Refunded:</strong> ₹{{ transaction_amount }} has been credited to your wallet.</span>
+                            <span><strong>Refunded:</strong> ₹{{ transaction_amount }} has been credited to your wallet for returned items.</span>
+                        </div>
+                        {% endif %}
+                        {% if cancellation_transaction_amount %}
+                        <div class="refund-notice" style="background-color: #f8f9fa; border-left-color: #6c757d; color: #495057;">
+                            <i class="fas fa-info-circle"></i>
+                            <span><strong>Cancelled:</strong> ₹{{ cancellation_transaction_amount }} has been credited to your wallet for cancelled items.</span>
                         </div>
                         {% endif %}
                     </div>
@@ -133,7 +151,7 @@
                                 <span>{{ order.shipping_address.street }}, {{ order.shipping_address.city }}, {{ order.shipping_address.state }}, {{ order.shipping_address.country }}, {{ order.shipping_address.postal_code }}</span>
                             </div>
                         </div>
-                        {% if is_paid or order.payment_method == 'cash_on_delivery' %}
+                        {% if is_paid or order.payment_method == 'cash_on_delivery' or order.payment_method == 'wallet' %}
                         <div style="margin-top: 25px;">
                             <a href="{% url 'order_invoice' order.pk %}" class="account-btn account-btn-primary" style="width: 100%; justify-content: center;">
                                 <i class="fas fa-file-invoice"></i> View Invoice
