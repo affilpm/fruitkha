@@ -42,7 +42,7 @@
 
 <!-- Summary Cards -->
 <div class="row mb-4">
-    <div class="col-sm-6 col-lg-3 mb-3">
+    <div class="col-sm-6 col-lg mb-3">
         <div class="card shadow-sm h-100 border-left-primary" style="border-left: 4px solid var(--accent-color);">
             <div class="card-body">
                 <div class="text-muted small text-uppercase font-weight-bold">Total Sales</div>
@@ -50,7 +50,7 @@
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-lg-3 mb-3">
+    <div class="col-sm-6 col-lg mb-3">
         <div class="card shadow-sm h-100" style="border-left: 4px solid #28a745;">
             <div class="card-body">
                 <div class="text-muted small text-uppercase font-weight-bold">Products Sold</div>
@@ -58,7 +58,7 @@
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-lg-3 mb-3">
+    <div class="col-sm-6 col-lg mb-3">
         <div class="card shadow-sm h-100" style="border-left: 4px solid #17a2b8;">
             <div class="card-body">
                 <div class="text-muted small text-uppercase font-weight-bold">Coupons Used</div>
@@ -66,11 +66,20 @@
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-lg-3 mb-3">
+    <div class="col-sm-6 col-lg mb-3">
         <div class="card shadow-sm h-100" style="border-left: 4px solid #6c757d;">
             <div class="card-body">
                 <div class="text-muted small text-uppercase font-weight-bold">Period</div>
                 <div class="mt-2 mb-0" style="font-size:0.85rem;">{{ start_date|date:"M d, Y" }} – {{ end_date|date:"M d, Y" }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg mb-3">
+        <div class="card shadow-sm h-100" style="border-left: 4px solid #dc3545;">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Returns/Cancellations</div>
+                <div class="h4 mt-2 mb-0">{{ returns_count }}</div>
+                <div class="mt-1 small" style="color: #dc3545;">-₹{{ total_refunds }}</div>
             </div>
         </div>
     </div>
@@ -90,8 +99,9 @@
                         <th>Products</th>
                         <th>Subtotal</th>
                         <th>Coupon</th>
+                        <th>Wallet</th>
                         <th>Offer</th>
-                        <th>Total</th>
+                        <th>Total (Cash + Wallet)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -107,8 +117,9 @@
                         </td>
                         <td>₹{{ order.subtotal }}</td>
                         <td>{% if order.coupon %}₹{{ order.coupon.discount_amount }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                        <td>{% if order.wallet_discount_amount > 0 %}₹{{ order.wallet_discount_amount }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
                         <td>{% if order.order_items.first.offer %}{{ order.order_items.first.offer.description }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
-                        <td class="font-weight-bold">₹{{ order.total_cost }}</td>
+                        <td class="font-weight-bold">₹{{ order.actual_total_cost }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

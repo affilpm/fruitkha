@@ -18,7 +18,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 import re
 from .utils import send_otp_email
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.core.exceptions import PermissionDenied
 from orders.models import Coupon, Wallet, Transaction, CancellationRequest, Order, OrderItem
 from wishlist.models import Wishlist
@@ -33,6 +33,52 @@ from openpyxl import Workbook
 import logging
 
 logger = logging.getLogger('home')
+
+def get_valid_order_items_q():
+    return Q(
+        Q(order__payment_method__icontains='cash', status='Delivered') |
+        Q(order__payment_method__icontains='cod', status='Delivered') |
+        Q(order__payment_method__icontains='razorpay', status__in=['Pending', 'Processing', 'Shipped', 'Delivered']) |
+        Q(order__payment_method__icontains='wallet', status__in=['Pending', 'Processing', 'Shipped', 'Delivered'])
+    )
+
+def calculate_sales_metrics(orders):
+    from decimal import Decimal
+    total_sales = Decimal('0.00')
+    products_sold_count = 0
+    coupons_used_count = 0
+    
+    returns_count = OrderItem.objects.filter(order__in=orders, status='Cancelled').count()
+    from django.db.models import Sum
+    total_refunds = Transaction.objects.filter(
+        order__in=orders, 
+        transaction_type__in=['Refund', 'Cancellation']
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    
+    for order in orders:
+        if order.coupon:
+            coupons_used_count += 1
+            
+        wallet_discount = order.wallet_discount if hasattr(order, 'wallet_discount') else Decimal('0.00')
+        order_revenue_base = order.total_cost + wallet_discount
+        
+        items = OrderItem.objects.filter(order=order)
+        for item in items:
+            is_eligible = False
+            if order.payment_method.lower() in ['razorpay', 'wallet']:
+                if item.status != 'Cancelled':
+                    is_eligible = True
+            elif order.payment_method.lower() in ['cash_on_delivery', 'cod']:
+                if item.status == 'Delivered':
+                    is_eligible = True
+                    
+            if is_eligible:
+                products_sold_count += 1
+                if order.subtotal > 0:
+                    item_revenue = (item.total_price / order.subtotal) * order_revenue_base
+                    total_sales += item_revenue
+                    
+    return total_sales, products_sold_count, coupons_used_count, returns_count, total_refunds
 
 def is_not_superuser(user):
     return not user.is_superuser
@@ -558,18 +604,22 @@ def admin_dashboard(request):
     for order in orders:
         order.order_items = OrderItem.objects.filter(order=order)
 
-    total_sales = orders.aggregate(total_sales=Sum('total_cost'))['total_sales'] or 0
-    products_sold_count = OrderItem.objects.filter(order__in=orders).count()
-    coupons_used_count = orders.exclude(coupon__isnull=True).count()
+    total_sales, products_sold_count, coupons_used_count, returns_count, total_refunds = calculate_sales_metrics(orders)
 
  
-    orders_data = Order.objects.filter(order_date__gte=start_date, order_date__lt=end_date).annotate(period=trunc_func('order_date')).values('period').annotate(order_count=Count('id')).order_by('period')
+    orders_data = Order.objects.filter(
+        order_date__gte=start_date, order_date__lt=end_date,
+        items__in=OrderItem.objects.filter(get_valid_order_items_q())
+    ).distinct().annotate(period=trunc_func('order_date')).values('period').annotate(order_count=Count('id')).order_by('period')
+    
     periods = [entry['period'].strftime(date_format) for entry in orders_data]
     orders_count = [entry['order_count'] for entry in orders_data]
     
-    top_selling_products = OrderItem.objects.filter(order__in=orders).values('product__name').annotate(product_count=Count('id')).order_by('-product_count')[:10]
+    top_selling_products = OrderItem.objects.filter(order__in=orders).filter(get_valid_order_items_q()).values('product__name').annotate(product_count=Count('id')).order_by('-product_count')[:10]
    
-    top_selling_categories = Category.objects.annotate(product_count=Count('product__orderitem')).order_by('-product_count')[:10]
+    top_selling_categories = Category.objects.filter(
+        product__orderitem__in=OrderItem.objects.filter(get_valid_order_items_q())
+    ).annotate(product_count=Count('product__orderitem', distinct=True)).order_by('-product_count')[:10]
     context = {
         'total_sales': total_sales,
         'start_date': start_date,
@@ -581,6 +631,8 @@ def admin_dashboard(request):
         'orders_count': orders_count,
         'periods': periods,
         'order_count': order_count,
+        'returns_count': returns_count,
+        'total_refunds': total_refunds,
         'top_selling_products': top_selling_products,
         'top_selling_categories': top_selling_categories,
     }
@@ -612,13 +664,15 @@ def report(request):
 
     for order in orders:
         order.order_items = OrderItem.objects.filter(order=order)
+        from decimal import Decimal
+        wallet_discount = order.wallet_discount if hasattr(order, 'wallet_discount') else Decimal('0.00')
+        order.actual_total_cost = order.total_cost + wallet_discount
+        order.wallet_discount_amount = wallet_discount
 
-    total_sales = orders.aggregate(total_sales=Sum('total_cost'))['total_sales'] or 0
-    products_sold_count = OrderItem.objects.filter(order__in=orders).count()
-    coupons_used_count = orders.exclude(coupon__isnull=True).count()
+    total_sales, products_sold_count, coupons_used_count, returns_count, total_refunds = calculate_sales_metrics(orders)
 
     if download:
-        excel_data = generate_excel_data(orders, total_sales, products_sold_count, coupons_used_count)
+        excel_data = generate_excel_data(orders, total_sales, products_sold_count, coupons_used_count, returns_count, total_refunds)
 
         response = HttpResponse(excel_data, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename=sales_report.xlsx'
@@ -632,27 +686,31 @@ def report(request):
         'orders': orders,
         'products_sold_count': products_sold_count,
         'coupons_used_count': coupons_used_count,
+        'returns_count': returns_count,
+        'total_refunds': total_refunds,
     }
 
     return render(request, 'sales_report.html', context)
 
-def generate_excel_data(orders, total_sales, products_sold_count, coupons_used_count):
+def generate_excel_data(orders, total_sales, products_sold_count, coupons_used_count, returns_count, total_refunds):
     wb = Workbook()
     ws = wb.active
     ws.title = "Sales Report"
 
-    ws.append(["Order ID", "Products Ordered", "Subtotal", "Coupon Discount", "Offer Applied", "Total Cost"])
+    ws.append(["Order ID", "Products Ordered", "Subtotal", "Coupon Discount", "Wallet Usage", "Offer Applied", "Total Paid"])
 
     for order in orders:
         products_ordered = ", ".join([item.product.name for item in order.order_items])
         coupon_discount = order.coupon.discount_amount if order.coupon else "None"
         offer_applied = order.order_items.first().offer.description if order.order_items.first().offer else "None"
-        ws.append([order.id, products_ordered, order.subtotal, coupon_discount, offer_applied, order.total_cost])
+        ws.append([order.id, products_ordered, order.subtotal, coupon_discount, order.wallet_discount_amount, offer_applied, order.actual_total_cost])
 
     ws.append([])
-    ws.append(["Total Sales", total_sales])
+    ws.append(["Gross Sales (Cash + Wallet)", total_sales])
     ws.append(["Products Sold Count", products_sold_count])
     ws.append(["Coupons Used Count", coupons_used_count])
+    ws.append(["Returns Count", returns_count])
+    ws.append(["Total Refunds", total_refunds])
 
     from io import BytesIO
     output = BytesIO()
