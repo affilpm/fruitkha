@@ -153,7 +153,7 @@ class ProductForm(forms.ModelForm):
     related_products = forms.ModelMultipleChoiceField(
         queryset=Product.objects.all(),
         required=False,
-        widget=forms.CheckboxSelectMultiple, 
+        widget=forms.SelectMultiple(attrs={'class': 'form-control select2-multi', 'data-placeholder': 'Search and select related products...'}), 
         label="Related Products"
     )
     
