@@ -27,7 +27,13 @@ SECRET_KEY = 'django-insecure-d&v_uvk*k65x6x2dsem(theg#z^c4azo#c^9=t4q&0#ye5qxbu
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['fruitkha.affilpm.com', 'localhost', '127.0.0.1', '*']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://fruitkha.affilpm.com',
+]
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Application definition

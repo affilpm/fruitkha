@@ -20,13 +20,29 @@ services:
       - /var/www/fruitkha-assets:/app/assets   # Mount static to host
       - /var/www/fruitkha-media:/app/media     # Mount media to host      
     ports:
-      - "8000:8000"
+      - "8090:8000"
     depends_on:
       - db
     env_file:
       - .env
 
+  nginx:
+    image: nginx:1.25-alpine
+    volumes:
+      - ./nginx:/etc/nginx/conf.d/default.conf
+      - /var/www/fruitkha-assets:/var/www/fruitkha-assets
+      - /var/www/fruitkha-media:/var/www/fruitkha-media
+    depends_on:
+      - web
 
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    depends_on:
+      - nginx
+    restart: unless-stopped
 
 volumes:
   postgres_data:
