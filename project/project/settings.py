@@ -137,13 +137,43 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = '/static/'
+# Cloudflare R2 Storage Settings
+R2_CUSTOM_DOMAIN = config('R2_CUSTOM_DOMAIN', default='')
+CLEAN_R2_DOMAIN = R2_CUSTOM_DOMAIN.replace('https://', '').replace('http://', '')
+
+AWS_ACCESS_KEY_ID = config('R2_ACCESS_KEY_ID', default=None)
+AWS_SECRET_ACCESS_KEY = config('R2_SECRET_ACCESS_KEY', default=None)
+AWS_STORAGE_BUCKET_NAME = config('R2_BUCKET_NAME', default=None)
+AWS_S3_ENDPOINT_URL = config('R2_ENDPOINT_URL', default=None)
+AWS_S3_CUSTOM_DOMAIN = CLEAN_R2_DOMAIN
+AWS_S3_REGION_NAME = 'auto'
+AWS_QUERYSTRING_AUTH = False
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'public, max-age=31536000, immutable',
+}
+AWS_S3_FILE_OVERWRITE = True
+
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')] 
-STATIC_ROOT = 'assets'
-
-
-MEDIA_URL = '/media/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'assets')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
+    STORAGES = {
+        "default": {
+            "BACKEND": "project.storage_backends.R2MediaStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "project.storage_backends.R2StaticStorage",
+        }
+    }
+    STATIC_URL = f'{R2_CUSTOM_DOMAIN}/static/' if R2_CUSTOM_DOMAIN else '/static/'
+    MEDIA_URL = f'{R2_CUSTOM_DOMAIN}/media/' if R2_CUSTOM_DOMAIN else '/media/'
+else:
+    STATIC_URL = '/static/'
+    MEDIA_URL = '/media/'
+
+
+
 
 
 # Default primary key field type
