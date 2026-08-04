@@ -88,26 +88,39 @@ class Product(models.Model):
                 self.price = self.original_price
                 self.original_price = None
 
+        # Resize images before saving to storage
+        from io import BytesIO
+        from django.core.files.uploadedfile import InMemoryUploadedFile
+        import sys
+
+        for field_name in ['image1', 'image2', 'image3']:
+            image_field = getattr(self, field_name)
+            if image_field and not getattr(image_field, '_committed', True):
+                try:
+                    image_field.file.seek(0)
+                    img = Image.open(image_field.file)
+                    
+                    if img.mode != 'RGB':
+                        img = img.convert('RGB')
+                        
+                    img.thumbnail((300, 300))
+                    
+                    thumb_io = BytesIO()
+                    img.save(thumb_io, format='JPEG', quality=90)
+                    
+                    new_image = InMemoryUploadedFile(
+                        thumb_io,
+                        None,
+                        image_field.name,
+                        'image/jpeg',
+                        sys.getsizeof(thumb_io),
+                        None
+                    )
+                    setattr(self, field_name, new_image)
+                except Exception:
+                    pass
+
         super(Product, self).save(*args, **kwargs)
-
-        if self.image1:
-            img = Image.open(self.image1.path)
-            fixed_size = (300, 300)
-            img.thumbnail(fixed_size)
-            img.save(self.image1.path)
-
-        if self.image2:
-            img = Image.open(self.image2.path)
-            fixed_size = (300, 300)
-            img.thumbnail(fixed_size)
-            img.save(self.image2.path)
-
-        # Resize and save the third image
-        if self.image3:
-            img = Image.open(self.image3.path)
-            fixed_size = (300, 300)
-            img.thumbnail(fixed_size)
-            img.save(self.image3.path)
 
 
 
