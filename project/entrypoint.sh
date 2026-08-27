@@ -8,8 +8,8 @@ done
 echo "📦 Running migrations..."
 python manage.py migrate --noinput
 
-# echo "🧹 Collecting static files..."
-# python manage.py collectstatic --noinput
+echo "🧹 Collecting static files in background..."
+python manage.py collectstatic --noinput > /dev/null 2>&1 &
 
 echo "✅ Starting server..."
 exec gunicorn project.wsgi:application --bind 0.0.0.0:8000
