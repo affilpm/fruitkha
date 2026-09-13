@@ -33,7 +33,7 @@
                         <td class="font-weight-bold">{{ item.product.name }}</td>
                         <td>{{ item.quantity_ordered }}</td>
                         <td>
-                            {% if item.product.offer %}
+                            {% if item.original_price_total > 0 %}
                                 <del class="text-muted small">₹{{ item.original_price_total }}</del>
                                 <span class="text-success font-weight-bold">₹{{ item.total_price }}</span>
                             {% else %}

@@ -206,7 +206,7 @@
                                     <span class="order-count-badge">{{ item.quantity_ordered }} kg</span>
                                 </td>
                                 <td>
-                                    {% if item.product.offer %}
+                                    {% if item.original_price_total > 0 %}
                                         <span class="wishlist-price-old">₹{{ item.original_price_total }}</span>
                                         <span class="wishlist-price">₹{{ item.total_price }}</span>
                                     {% else %}
@@ -290,7 +290,7 @@
                             </div>
                             <div class="order-mobile-row">
                                 <span class="order-mobile-label">Price</span>
-                                {% if item.product.offer %}
+                                {% if item.original_price_total > 0 %}
                                     <span>
                                         <span class="wishlist-price-old">₹{{ item.original_price_total }}</span>
                                         <span class="wishlist-price">₹{{ item.total_price }}</span>
