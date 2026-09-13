@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -76,18 +77,18 @@
                             {% csrf_token %}
                             <script
                                 src="https://checkout.razorpay.com/v1/checkout.js"
-                                data-key="{{razor_key_id}}"
+                                data-key="{{ razor_key_id }}"
                                 data-amount="{{ payment.amount }}"
                                 data-currency="INR"
                                 data-order_id="{{ payment.id }}"
                                 data-buttontext="Pay with Razorpay"
-                                data-name="Fruithka"
-                                data-description="Test"
-                                data-image="https://example.com/your_logo.jpg"
-                                data-prefill.name="Gaurav Kumar"
-                                data-prefill.email="gaurav.kumar@example.com"
+                                data-name="Fruitkha"
+                                data-description="Fruitkha Order Payment"
+                                data-image="{% static 'assets/img/logo.png' %}"
+                                data-prefill.name="{% if address and address.name %}{{ address.name }}{% elif user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}"
+                                data-prefill.email="{{ user.email }}"
                                 data-theme.color="#F37254"
-                                data-prefill.contact=""
+                                data-prefill.contact="{% if address and address.phone_number %}{{ address.phone_number }}{% endif %}"
                                 data-handler="onRazorpayPaymentComplete"
                                 data-modal.ondismiss="onRazorpayModalDismiss"
                             ></script>

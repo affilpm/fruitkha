@@ -117,7 +117,8 @@ def retry_razorpay(request):
             razor_key_id = settings.RAZOR_KEY_ID
 
             save_order(request)
-            return render(request, "razorpay.html", {'payment': payment, 'razor_key_id': razor_key_id, 'razorpay_id': razorpay_id})
+            address = order.shipping_address
+            return render(request, "razorpay.html", {'payment': payment, 'razor_key_id': razor_key_id, 'razorpay_id': razorpay_id, 'address': address})
     else:
         return redirect('home')
 
@@ -315,7 +316,9 @@ def razorpay_view(request):
         razor_key_id = settings.RAZOR_KEY_ID
         
         save_order(request)
-        return render(request, "razorpay.html", {'payment': payment, 'razor_key_id': razor_key_id})
+        shipping_address_id = request.POST.get('selected-address')
+        address = Address.objects.filter(user=request.user, id=shipping_address_id).first() if shipping_address_id else Address.objects.filter(user=request.user).first()
+        return render(request, "razorpay.html", {'payment': payment, 'razor_key_id': razor_key_id, 'address': address})
     else:
         return redirect('home') 
 
