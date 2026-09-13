@@ -8,13 +8,33 @@
 <div class="card shadow mb-4">
     <div class="card-body">
         <form action="" method="get" class="mb-4">
-            {% csrf_token %}
-            <div class="input-group">
-                <input type="text" name="query" value="{{ query }}" class="form-control bg-light border-0 small" placeholder="Search orders..." aria-label="Search">
-                <div class="input-group-append">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-search fa-sm"></i>
-                    </button>
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <div class="input-group">
+                        <input type="text" name="query" value="{{ query }}" class="form-control bg-light border-0 small" placeholder="Search orders..." aria-label="Search">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search fa-sm"></i> Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-2">
+                    <div class="input-group">
+                        <select name="status" class="form-control">
+                            <option value="">All Statuses</option>
+                            <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                            <option value="Processing" {% if status_filter == 'Processing' %}selected{% endif %}>Processing</option>
+                            <option value="Shipped" {% if status_filter == 'Shipped' %}selected{% endif %}>Shipped</option>
+                            <option value="Delivered" {% if status_filter == 'Delivered' %}selected{% endif %}>Delivered</option>
+                            <option value="Cancelled" {% if status_filter == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter fa-sm"></i> Filter
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </form>

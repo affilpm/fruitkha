@@ -24,6 +24,74 @@
     </div>
 </form>
 
+<!-- Revenue Summary Cards -->
+<div class="row mb-4">
+    <div class="col-sm-6 col-lg-3 mb-3">
+        <div class="card shadow-sm h-100" style="border-left: 4px solid #28a745;">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Gross Revenue</div>
+                <div class="h4 mt-2 mb-0" style="color: #28a745;">₹{{ gross_revenue|floatformat:2 }}</div>
+                <div class="small text-muted mt-1">From confirmed payments only</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3 mb-3">
+        <div class="card shadow-sm h-100" style="border-left: 4px solid #007bff;">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Net Revenue</div>
+                <div class="h4 mt-2 mb-0" style="color: #007bff;">₹{{ net_revenue|floatformat:2 }}</div>
+                <div class="small text-muted mt-1">After deducting refunds</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3 mb-3">
+        <div class="card shadow-sm h-100" style="border-left: 4px solid #dc3545;">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Cancellation Losses</div>
+                <div class="h4 mt-2 mb-0" style="color: #dc3545;">-₹{{ cancellation_loss|floatformat:2 }}</div>
+                <div class="small text-muted mt-1">{{ cancellation_count }} item{{ cancellation_count|pluralize }} cancelled</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3 mb-3">
+        <div class="card shadow-sm h-100" style="border-left: 4px solid #ffc107;">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Unpaid Orders</div>
+                <div class="h4 mt-2 mb-0" style="color: #ffc107;">{{ unpaid_order_count }}</div>
+                <div class="small text-muted mt-1">Incomplete Razorpay payments</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Secondary Stats -->
+<div class="row mb-4">
+    <div class="col-sm-6 col-lg-4 mb-3">
+        <div class="card shadow-sm h-100" style="border-left: 4px solid #17a2b8;">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Products Sold</div>
+                <div class="h4 mt-2 mb-0">{{ products_sold_count }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-4 mb-3">
+        <div class="card shadow-sm h-100" style="border-left: 4px solid #6c757d;">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Coupons Used</div>
+                <div class="h4 mt-2 mb-0">{{ coupons_used_count }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-4 mb-3">
+        <div class="card shadow-sm h-100" style="border-left: 4px solid #6c757d;">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Period</div>
+                <div class="mt-2 mb-0" style="font-size:0.85rem;">{{ start_date|date:"M d, Y" }} – {{ end_date|date:"M d, Y" }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Chart Container -->
 <div class="chart-container">
     <canvas id="myPieChart" class="w-100"></canvas>

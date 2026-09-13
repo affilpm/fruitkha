@@ -35,50 +35,99 @@ import logging
 logger = logging.getLogger('home')
 
 def get_valid_order_items_q():
+    """
+    Returns a Q filter for order items that represent actual confirmed revenue.
+    
+    Revenue rules:
+    - COD: Only after delivery (money collected on delivery)
+    - Razorpay: Only when payment is completed (paid=True) AND item not cancelled
+    - Wallet: When item is not cancelled (payment deducted at order time)
+    """
     return Q(
         Q(order__payment_method__icontains='cash', status='Delivered') |
         Q(order__payment_method__icontains='cod', status='Delivered') |
-        Q(order__payment_method__icontains='razorpay', status__in=['Pending', 'Processing', 'Shipped', 'Delivered']) |
+        Q(order__payment_method__icontains='razorpay', order__razorpay_order__paid=True, status__in=['Pending', 'Processing', 'Shipped', 'Delivered']) |
         Q(order__payment_method__icontains='wallet', status__in=['Pending', 'Processing', 'Shipped', 'Delivered'])
     )
 
+
 def calculate_sales_metrics(orders):
+    """
+    Computes revenue metrics with correct accounting logic.
+    
+    Returns 7 values:
+        gross_revenue:      Money actually received (from paid, non-cancelled items only)
+        products_sold_count: Number of items that generated revenue
+        coupons_used_count:  Number of orders that used a coupon
+        cancellation_count:  Number of cancelled items
+        cancellation_loss:   Money refunded for cancellations where payment was already collected
+        unpaid_order_count:  Razorpay orders where payment was never completed
+        net_revenue:         gross_revenue - cancellation_loss
+    """
     from decimal import Decimal
-    total_sales = Decimal('0.00')
+
+    gross_revenue = Decimal('0.00')
     products_sold_count = 0
     coupons_used_count = 0
-    
-    returns_count = OrderItem.objects.filter(order__in=orders, status='Cancelled').count()
-    from django.db.models import Sum
-    total_refunds = Transaction.objects.filter(
-        order__in=orders, 
+    cancellation_count = 0
+    unpaid_order_count = 0
+
+    # Cancellation loss: actual refunds issued (from Transaction records)
+    cancellation_loss = Transaction.objects.filter(
+        order__in=orders,
         transaction_type__in=['Refund', 'Cancellation']
     ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-    
+
     for order in orders:
         if order.coupon:
             coupons_used_count += 1
-            
+
+        payment_method = order.payment_method.lower()
+
+        # Determine if this order's payment was actually received
+        is_order_paid = False
+        if payment_method in ['razorpay']:
+            razorpay_order = order.razorpay_order
+            if razorpay_order and razorpay_order.paid:
+                is_order_paid = True
+            else:
+                unpaid_order_count += 1
+        elif payment_method == 'wallet':
+            # Wallet payment is deducted at order creation time
+            is_order_paid = True
+        elif payment_method in ['cash_on_delivery', 'cod']:
+            # COD: payment is received per-item on delivery
+            is_order_paid = False  # Handled per-item below
+
         wallet_discount = order.wallet_discount if hasattr(order, 'wallet_discount') else Decimal('0.00')
         order_revenue_base = order.total_cost + wallet_discount
-        
+
         items = OrderItem.objects.filter(order=order)
         for item in items:
-            is_eligible = False
-            if order.payment_method.lower() in ['razorpay', 'wallet']:
-                if item.status != 'Cancelled':
-                    is_eligible = True
-            elif order.payment_method.lower() in ['cash_on_delivery', 'cod']:
+            if item.status == 'Cancelled':
+                cancellation_count += 1
+                continue
+
+            # Determine if this specific item generated revenue
+            item_has_revenue = False
+            if payment_method in ['cash_on_delivery', 'cod']:
+                # COD: only count revenue after delivery (money collected)
                 if item.status == 'Delivered':
-                    is_eligible = True
-                    
-            if is_eligible:
+                    item_has_revenue = True
+            elif is_order_paid:
+                # Razorpay (paid) or Wallet: item not cancelled = revenue
+                item_has_revenue = True
+
+            if item_has_revenue:
                 products_sold_count += 1
                 if order.subtotal > 0:
                     item_revenue = (item.total_price / order.subtotal) * order_revenue_base
-                    total_sales += item_revenue
-                    
-    return total_sales, products_sold_count, coupons_used_count, returns_count, total_refunds
+                    gross_revenue += item_revenue
+
+    net_revenue = gross_revenue - cancellation_loss
+
+    return (gross_revenue, products_sold_count, coupons_used_count,
+            cancellation_count, cancellation_loss, unpaid_order_count, net_revenue)
 
 def is_not_superuser(user):
     return not user.is_superuser
@@ -604,9 +653,9 @@ def admin_dashboard(request):
     for order in orders:
         order.order_items = OrderItem.objects.filter(order=order)
 
-    total_sales, products_sold_count, coupons_used_count, returns_count, total_refunds = calculate_sales_metrics(orders)
+    (gross_revenue, products_sold_count, coupons_used_count,
+     cancellation_count, cancellation_loss, unpaid_order_count, net_revenue) = calculate_sales_metrics(orders)
 
- 
     orders_data = Order.objects.filter(
         order_date__gte=start_date, order_date__lt=end_date,
         items__in=OrderItem.objects.filter(get_valid_order_items_q())
@@ -621,7 +670,8 @@ def admin_dashboard(request):
         product__orderitem__in=OrderItem.objects.filter(get_valid_order_items_q())
     ).annotate(product_count=Count('product__orderitem', distinct=True)).order_by('-product_count')[:10]
     context = {
-        'total_sales': total_sales,
+        'gross_revenue': gross_revenue,
+        'net_revenue': net_revenue,
         'start_date': start_date,
         'end_date': end_date - timedelta(days=1),
         'interval': interval.capitalize(),
@@ -631,8 +681,9 @@ def admin_dashboard(request):
         'orders_count': orders_count,
         'periods': periods,
         'order_count': order_count,
-        'returns_count': returns_count,
-        'total_refunds': total_refunds,
+        'cancellation_count': cancellation_count,
+        'cancellation_loss': cancellation_loss,
+        'unpaid_order_count': unpaid_order_count,
         'top_selling_products': top_selling_products,
         'top_selling_categories': top_selling_categories,
     }
@@ -660,7 +711,7 @@ def report(request):
         start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
         end_date = start_date + timedelta(days=1) - timedelta(seconds=1)
 
-    orders = Order.objects.filter(order_date__gte=start_date, order_date__lt=end_date)
+    orders = Order.objects.filter(order_date__gte=start_date, order_date__lt=end_date).select_related('razorpay_order', 'coupon')
 
     for order in orders:
         order.order_items = OrderItem.objects.filter(order=order)
@@ -669,48 +720,88 @@ def report(request):
         order.actual_total_cost = order.total_cost + wallet_discount
         order.wallet_discount_amount = wallet_discount
 
-    total_sales, products_sold_count, coupons_used_count, returns_count, total_refunds = calculate_sales_metrics(orders)
+        # Annotate payment status for display
+        all_items = list(order.order_items)
+        cancelled_items = [i for i in all_items if i.status == 'Cancelled']
+
+        # If all items are cancelled, show Cancelled regardless of payment method
+        if len(all_items) > 0 and len(cancelled_items) == len(all_items):
+            order.payment_status = 'Cancelled'
+        else:
+            payment_method = order.payment_method.lower()
+            if payment_method in ['razorpay']:
+                razorpay_order = order.razorpay_order
+                if razorpay_order and razorpay_order.paid:
+                    order.payment_status = 'Paid'
+                else:
+                    order.payment_status = 'Unpaid'
+            elif payment_method == 'wallet':
+                order.payment_status = 'Paid'
+            elif payment_method in ['cash_on_delivery', 'cod']:
+                delivered_items = [i for i in all_items if i.status == 'Delivered']
+                if len(delivered_items) == len(all_items):
+                    order.payment_status = 'Paid'
+                elif len(delivered_items) > 0:
+                    order.payment_status = 'Partial'
+                else:
+                    order.payment_status = 'Pending'
+            else:
+                order.payment_status = 'Unknown'
+
+    (gross_revenue, products_sold_count, coupons_used_count,
+     cancellation_count, cancellation_loss, unpaid_order_count, net_revenue) = calculate_sales_metrics(orders)
 
     if download:
-        excel_data = generate_excel_data(orders, total_sales, products_sold_count, coupons_used_count, returns_count, total_refunds)
+        excel_data = generate_excel_data(orders, gross_revenue, net_revenue, products_sold_count,
+                                         coupons_used_count, cancellation_count, cancellation_loss, unpaid_order_count)
 
         response = HttpResponse(excel_data, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = 'attachment; filename=sales_report.xlsx'
         return response
 
     context = {
-        'total_sales': total_sales,
+        'gross_revenue': gross_revenue,
+        'net_revenue': net_revenue,
         'start_date': start_date,
         'end_date': end_date,
         'interval': interval.capitalize(),
         'orders': orders,
         'products_sold_count': products_sold_count,
         'coupons_used_count': coupons_used_count,
-        'returns_count': returns_count,
-        'total_refunds': total_refunds,
+        'cancellation_count': cancellation_count,
+        'cancellation_loss': cancellation_loss,
+        'unpaid_order_count': unpaid_order_count,
     }
 
     return render(request, 'sales_report.html', context)
 
-def generate_excel_data(orders, total_sales, products_sold_count, coupons_used_count, returns_count, total_refunds):
+def generate_excel_data(orders, gross_revenue, net_revenue, products_sold_count,
+                        coupons_used_count, cancellation_count, cancellation_loss, unpaid_order_count):
     wb = Workbook()
     ws = wb.active
     ws.title = "Sales Report"
 
-    ws.append(["Order ID", "Products Ordered", "Subtotal", "Coupon Discount", "Wallet Usage", "Offer Applied", "Total Paid"])
+    ws.append(["Order ID", "Products Ordered", "Payment Method", "Payment Status",
+               "Subtotal", "Coupon Discount", "Wallet Usage", "Offer Applied", "Total Paid"])
 
     for order in orders:
         products_ordered = ", ".join([item.product.name for item in order.order_items])
         coupon_discount = order.coupon.discount_amount if order.coupon else "None"
-        offer_applied = order.order_items.first().offer.description if order.order_items.first().offer else "None"
-        ws.append([order.id, products_ordered, order.subtotal, coupon_discount, order.wallet_discount_amount, offer_applied, order.actual_total_cost])
+        first_item = order.order_items.first()
+        offer_applied = first_item.offer.description if first_item and first_item.offer else "None"
+        ws.append([order.id, products_ordered, order.payment_method, order.payment_status,
+                   order.subtotal, coupon_discount, order.wallet_discount_amount,
+                   offer_applied, order.actual_total_cost])
 
     ws.append([])
-    ws.append(["Gross Sales (Cash + Wallet)", total_sales])
+    ws.append(["Gross Revenue", gross_revenue])
+    ws.append(["Cancellation Losses (Refunded)", cancellation_loss])
+    ws.append(["Net Revenue", net_revenue])
+    ws.append([])
     ws.append(["Products Sold Count", products_sold_count])
     ws.append(["Coupons Used Count", coupons_used_count])
-    ws.append(["Returns Count", returns_count])
-    ws.append(["Total Refunds", total_refunds])
+    ws.append(["Cancellation Count", cancellation_count])
+    ws.append(["Unpaid Orders (Incomplete Razorpay)", unpaid_order_count])
 
     from io import BytesIO
     output = BytesIO()
@@ -885,15 +976,19 @@ def admin_users(request):
 @never_cache
 def admin_orders(request):
     query = request.GET.get('query', '')
+    status_filter = request.GET.get('status', '')
     orders = Order.objects.filter(user__username__icontains=query).order_by('-id')
     
+    if status_filter:
+        orders = orders.filter(items__status=status_filter).distinct()
+        
     for order in orders:
         order.order_items = OrderItem.objects.filter(order=order)
         
         for item in order.order_items:
             item.product = item.product 
 
-    return render(request, 'admin_orders.html', {'orders': orders, 'query': query})
+    return render(request, 'admin_orders.html', {'orders': orders, 'query': query, 'status_filter': status_filter})
 
 
 
@@ -1013,8 +1108,15 @@ def approve_cancellation_request(request, request_id):
 
 @staff_member_required(login_url='admin_login')
 def admin_coupons(request):
-    coupons = Coupon.objects.all().order_by('id')
-    return render(request, 'admin_coupons.html', {'coupons': coupons})
+    status_filter = request.GET.get('status', '')
+    coupons = Coupon.objects.all().order_by('-id')
+    
+    if status_filter == 'active':
+        coupons = coupons.filter(is_active=True, valid_to__gte=timezone.now())
+    elif status_filter == 'expired':
+        coupons = coupons.filter(Q(is_active=False) | Q(valid_to__lt=timezone.now()))
+        
+    return render(request, 'admin_coupons.html', {'coupons': coupons, 'status_filter': status_filter})
 
 
 
@@ -1073,8 +1175,15 @@ def delete_coupon(request, coupon_id):
 
 @staff_member_required(login_url='admin_login')
 def admin_offers(request):
-    offers = Offer.objects.all().order_by('id')
-    return render(request, 'admin_offers.html', {'offers': offers})
+    status_filter = request.GET.get('status', '')
+    offers = Offer.objects.all().order_by('-id')
+    
+    if status_filter == 'active':
+        offers = offers.filter(end_date__gte=timezone.now().date())
+    elif status_filter == 'expired':
+        offers = offers.filter(end_date__lt=timezone.now().date())
+        
+    return render(request, 'admin_offers.html', {'offers': offers, 'status_filter': status_filter})
 
 
 

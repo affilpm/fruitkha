@@ -9,6 +9,25 @@
 </div>
 
 <div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form action="" method="get" class="mb-0">
+            <div class="input-group" style="max-width: 300px;">
+                <select name="status" class="form-control">
+                    <option value="">All Coupons</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                    <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>Expired</option>
+                </select>
+                <div class="input-group-append">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter fa-sm"></i> Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover text-center mb-0">

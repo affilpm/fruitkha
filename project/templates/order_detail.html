@@ -80,7 +80,7 @@
                             <li class="account-info-item highlight-row">
                                 <div class="account-info-label">
                                     <span class="label-text" style="font-weight: 700;">
-                                        {% if not is_paid and order.payment_method.lower == 'cash_on_delivery' %}
+                                        {% if not is_paid %}
                                             Amount to Pay
                                         {% else %}
                                             Total Paid

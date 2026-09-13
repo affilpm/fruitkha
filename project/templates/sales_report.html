@@ -43,26 +43,28 @@
 <!-- Summary Cards -->
 <div class="row mb-4">
     <div class="col-sm-6 col-lg mb-3">
-        <div class="card shadow-sm h-100 border-left-primary" style="border-left: 4px solid var(--accent-color);">
+        <div class="card shadow-sm h-100" style="border-left: 4px solid #28a745;">
             <div class="card-body">
-                <div class="text-muted small text-uppercase font-weight-bold">Total Sales</div>
-                <div class="h4 mt-2 mb-0">₹{{ total_sales }}</div>
+                <div class="text-muted small text-uppercase font-weight-bold">Gross Revenue</div>
+                <div class="h4 mt-2 mb-0" style="color: #28a745;">₹{{ gross_revenue|floatformat:2 }}</div>
+                <div class="small text-muted mt-1">Confirmed payments only</div>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-lg mb-3">
-        <div class="card shadow-sm h-100" style="border-left: 4px solid #28a745;">
+        <div class="card shadow-sm h-100" style="border-left: 4px solid #007bff;">
             <div class="card-body">
-                <div class="text-muted small text-uppercase font-weight-bold">Products Sold</div>
-                <div class="h4 mt-2 mb-0">{{ products_sold_count }}</div>
+                <div class="text-muted small text-uppercase font-weight-bold">Net Revenue</div>
+                <div class="h4 mt-2 mb-0" style="color: #007bff;">₹{{ net_revenue|floatformat:2 }}</div>
+                <div class="small text-muted mt-1">After refunds</div>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-lg mb-3">
         <div class="card shadow-sm h-100" style="border-left: 4px solid #17a2b8;">
             <div class="card-body">
-                <div class="text-muted small text-uppercase font-weight-bold">Coupons Used</div>
-                <div class="h4 mt-2 mb-0">{{ coupons_used_count }}</div>
+                <div class="text-muted small text-uppercase font-weight-bold">Products Sold</div>
+                <div class="h4 mt-2 mb-0">{{ products_sold_count }}</div>
             </div>
         </div>
     </div>
@@ -74,12 +76,33 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- Secondary Stats -->
+<div class="row mb-4">
     <div class="col-sm-6 col-lg mb-3">
         <div class="card shadow-sm h-100" style="border-left: 4px solid #dc3545;">
             <div class="card-body">
-                <div class="text-muted small text-uppercase font-weight-bold">Returns/Cancellations</div>
-                <div class="h4 mt-2 mb-0">{{ returns_count }}</div>
-                <div class="mt-1 small" style="color: #dc3545;">-₹{{ total_refunds }}</div>
+                <div class="text-muted small text-uppercase font-weight-bold">Cancellations</div>
+                <div class="h4 mt-2 mb-0" style="color: #dc3545;">{{ cancellation_count }}</div>
+                <div class="mt-1 small" style="color: #dc3545;">-₹{{ cancellation_loss|floatformat:2 }} refunded</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg mb-3">
+        <div class="card shadow-sm h-100" style="border-left: 4px solid #ffc107;">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Unpaid Orders</div>
+                <div class="h4 mt-2 mb-0" style="color: #ffc107;">{{ unpaid_order_count }}</div>
+                <div class="small text-muted mt-1">Incomplete Razorpay</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg mb-3">
+        <div class="card shadow-sm h-100" style="border-left: 4px solid #17a2b8;">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase font-weight-bold">Coupons Used</div>
+                <div class="h4 mt-2 mb-0">{{ coupons_used_count }}</div>
             </div>
         </div>
     </div>
@@ -97,6 +120,8 @@
                     <tr>
                         <th>Order ID</th>
                         <th>Products</th>
+                        <th>Payment</th>
+                        <th>Status</th>
                         <th>Subtotal</th>
                         <th>Coupon</th>
                         <th>Wallet</th>
@@ -111,9 +136,34 @@
                         <td>
                             <ul class="list-unstyled mb-0">
                                 {% for item in order.order_items %}
-                                <li class="small">{{ item.product.name }}</li>
+                                <li class="small">
+                                    {{ item.product.name }}
+                                    {% if item.status == 'Cancelled' %}
+                                        <span class="badge badge-danger" style="font-size: 0.7em;">Cancelled</span>
+                                    {% elif item.status == 'Delivered' %}
+                                        <span class="badge badge-success" style="font-size: 0.7em;">Delivered</span>
+                                    {% endif %}
+                                </li>
                                 {% endfor %}
                             </ul>
+                        </td>
+                        <td>
+                            <span class="small">{{ order.payment_method }}</span>
+                        </td>
+                        <td>
+                            {% if order.payment_status == 'Paid' %}
+                                <span class="badge badge-success">Paid</span>
+                            {% elif order.payment_status == 'Cancelled' %}
+                                <span class="badge badge-dark">Cancelled</span>
+                            {% elif order.payment_status == 'Unpaid' %}
+                                <span class="badge badge-danger">Unpaid</span>
+                            {% elif order.payment_status == 'Partial' %}
+                                <span class="badge badge-warning text-dark">Partial</span>
+                            {% elif order.payment_status == 'Pending' %}
+                                <span class="badge badge-secondary">Pending</span>
+                            {% else %}
+                                <span class="badge badge-light">{{ order.payment_status }}</span>
+                            {% endif %}
                         </td>
                         <td>₹{{ order.subtotal }}</td>
                         <td>{% if order.coupon %}₹{{ order.coupon.discount_amount }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
